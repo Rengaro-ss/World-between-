@@ -1,0 +1,20 @@
+{
+	"schemaVersion": 1,
+	"id": "worldbetween",
+	"version": "${version}",
+	"name": "World Between",
+	"description": "Three factions grow, gather resources, build and wage war on their own. You survive between them.",
+	"authors": [],
+	"license": "All-Rights-Reserved",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["com.worldbetween.WorldBetween"],
+		"client": ["com.worldbetween.client.WorldBetweenClient"]
+	},
+	"depends": {
+		"fabricloader": ">=0.16.0",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

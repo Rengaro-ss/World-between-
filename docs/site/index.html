@@ -1,0 +1,949 @@
+<title>World Between</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,600;0,700;1,400&family=Pixelify+Sans:wght@600;700&family=Alegreya+SC:wght@500;700&family=Alegreya+Sans+SC:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a long-form lore codex. A pixel diorama of the world opens the page, then
+   one reading column, widening to full bleed for the three peoples and the diagrams. */
+:root {
+  --bg: #e9e7ea;
+  --surface: #f6f5f7;
+  --sunk: #dddae0;
+  --fg: #1c1a21;
+  --muted: #5d5866;
+  --line: #c4bfca;
+  --neris: #a8541a;
+  --arki: #2f62c9;
+  --kament: #5e5a54;
+  --gold: #8a6513;
+  --ok: #2f7d4a;
+  --wip: #a8541a;
+
+  --pixel: "Pixelify Sans", ui-monospace, monospace;
+  --head: "Alegreya SC", "Alegreya", Georgia, serif;
+  --label: "Alegreya Sans SC", "Alegreya Sans", system-ui, sans-serif;
+  --body: "Alegreya", "PT Serif", Georgia, "Times New Roman", serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --step--1: 0.875rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.3rem;
+  --step-2: 1.65rem;
+  --step-3: 2.2rem;
+  --step-4: clamp(2.6rem, 7vw, 4.6rem);
+  --measure: 66ch;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131118;
+    --surface: #1c1923;
+    --sunk: #0e0c12;
+    --fg: #ebe6df;
+    --muted: #a39dab;
+    --line: #34303d;
+    --neris: #e58c45;
+    --arki: #86aeff;
+    --kament: #b3aea5;
+    --gold: #e2b75c;
+    --ok: #6fcf8f;
+    --wip: #e58c45;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131118;
+  --surface: #1c1923;
+  --sunk: #0e0c12;
+  --fg: #ebe6df;
+  --muted: #a39dab;
+  --line: #34303d;
+  --neris: #e58c45;
+  --arki: #86aeff;
+  --kament: #b3aea5;
+  --gold: #e2b75c;
+  --ok: #6fcf8f;
+  --wip: #e58c45;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 4rem;
+}
+a { color: inherit; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+h1, h2, h3, h4 { font-family: var(--head); font-weight: 700; line-height: 1.15; text-wrap: balance; margin: 0; }
+h2 { font-size: var(--step-3); }
+h3 { font-size: var(--step-2); }
+h4 { font-size: var(--step-1); }
+p { margin: 0; }
+
+.wrap { max-width: 1120px; margin-inline: auto; }
+.column { max-width: var(--measure); }
+.eyebrow {
+  font-family: var(--label);
+  font-size: var(--step--1);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.lead { font-size: var(--step-1); line-height: 1.5; }
+.muted { color: var(--muted); }
+
+/* ---------- nav ---------- */
+nav.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+  margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  padding: 0.55rem max(16px, env(safe-area-inset-left, 0px));
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+nav.top .wrap { display: flex; gap: 1.25rem; align-items: center; overflow-x: auto; scrollbar-width: none; }
+nav.top a { font-family: var(--label); font-size: var(--step--1); text-decoration: none; white-space: nowrap; color: var(--muted); }
+nav.top a:hover { color: var(--fg); }
+nav.top .brand { font-family: var(--pixel); color: var(--fg); font-weight: 700; margin-right: auto; }
+
+/* ---------- hero ---------- */
+header.hero { padding-block: 2.5rem 1rem; }
+.hero-grid { display: grid; gap: 1.5rem; }
+.hero h1 { font-family: var(--pixel); font-size: var(--step-4); font-weight: 700; letter-spacing: 0.01em; }
+.hero h1 .between { color: var(--gold); }
+.diorama {
+  margin-top: 1.75rem;
+  border: 1px solid var(--line);
+  background: var(--sunk);
+  overflow: hidden;
+}
+.diorama canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
+.diorama figcaption {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  font-family: var(--label); font-size: var(--step--1);
+  border-top: 1px solid var(--line);
+}
+.diorama figcaption span { padding: 0.5rem 0.75rem; }
+.diorama figcaption span + span { border-left: 1px solid var(--line); }
+.chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.25rem; }
+.chip {
+  font-family: var(--mono); font-size: 0.8rem;
+  border: 1px solid var(--line); padding: 0.2rem 0.6rem; color: var(--muted);
+}
+.chip.live { color: var(--wip); border-color: currentColor; }
+
+section { padding-block: 4rem 0; }
+section > .wrap > header { display: grid; gap: 0.6rem; margin-bottom: 2rem; }
+
+/* ---------- principles ---------- */
+.principles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.principle { background: var(--surface); padding: 1.4rem; display: grid; gap: 0.5rem; align-content: start; }
+.principle h4 { font-size: 1.1rem; }
+
+/* ---------- peoples ---------- */
+.people {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 2rem;
+  border-top: 3px solid var(--c);
+  padding-top: 1.75rem;
+  margin-top: 3rem;
+}
+.people:first-of-type { margin-top: 0; }
+.people-head { display: grid; grid-template-columns: auto 1fr; gap: 1.25rem; align-items: center; }
+.emblem { width: 96px; height: 96px; image-rendering: pixelated; background: var(--sunk); border: 1px solid var(--line); }
+.people-head h3 { color: var(--c); font-size: var(--step-3); }
+.people-head .motto { font-style: italic; color: var(--muted); margin-top: 0.3rem; }
+.people-body { display: grid; gap: 2rem; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+@media (max-width: 820px) { .people-body { grid-template-columns: minmax(0, 1fr); } }
+.lore { display: grid; gap: 1rem; }
+.facts { display: grid; gap: 0; border: 1px solid var(--line); background: var(--surface); align-self: start; }
+.facts div { display: grid; grid-template-columns: 8.5rem 1fr; gap: 0.75rem; padding: 0.6rem 0.9rem; }
+.facts div + div { border-top: 1px solid var(--line); }
+.facts dt { font-family: var(--label); font-size: var(--step--1); color: var(--muted); }
+.facts dd { margin: 0; }
+.mechanics { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.25rem 2rem; }
+.mechanic { display: grid; gap: 0.35rem; align-content: start; }
+.mechanic h4 { font-size: 1.05rem; color: var(--c); }
+.c-neris { --c: var(--neris); }
+.c-arki { --c: var(--arki); }
+.c-kament { --c: var(--kament); }
+
+/* ---------- relations ---------- */
+.rel-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.5rem; align-items: center; }
+@media (max-width: 820px) { .rel-grid { grid-template-columns: minmax(0, 1fr); } }
+.triangle { width: 100%; height: auto; max-width: 520px; }
+.triangle text { font-family: var(--label); }
+.axes { display: grid; gap: 1.25rem; }
+.axis { display: grid; gap: 0.3rem; padding-left: 1rem; border-left: 3px solid var(--line); }
+.axis.hot { border-left-color: var(--neris); }
+.axis h4 { font-size: 1.05rem; }
+.heat { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); }
+
+/* ---------- layers ---------- */
+.layers { display: grid; gap: 0; border: 1px solid var(--line); }
+.layer { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 1.5rem; padding: 1.25rem 1.4rem; background: var(--surface); }
+.layer + .layer { border-top: 1px dashed var(--line); }
+.layer .where { font-family: var(--label); font-size: var(--step--1); color: var(--muted); }
+.layer h4 { font-size: 1.15rem; margin-bottom: 0.3rem; }
+@media (max-width: 640px) { .layer { grid-template-columns: minmax(0, 1fr); gap: 0.4rem; } }
+.scale { font-family: var(--mono); font-size: 0.8rem; color: var(--gold); }
+
+.chain-wrap { overflow-x: auto; margin-top: 2.5rem; border: 1px solid var(--line); background: var(--sunk); padding: 1.5rem; }
+.chain { display: flex; align-items: center; gap: 0.5rem; min-width: 760px; }
+.node {
+  border: 1px solid var(--neris); background: var(--surface);
+  padding: 0.55rem 0.75rem; font-family: var(--label); font-size: 0.92rem; text-align: center;
+  display: grid; gap: 0.15rem;
+}
+.node small { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+.arrow { color: var(--neris); font-family: var(--mono); }
+.chain-note { margin-top: 1rem; font-size: var(--step--1); color: var(--muted); max-width: 70ch; }
+
+/* ---------- player ---------- */
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.5rem; }
+@media (max-width: 820px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.rep { display: grid; gap: 0.9rem; }
+.rep-row { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 0.75rem; align-items: center; }
+.rep-row .label { font-family: var(--label); font-size: var(--step--1); color: var(--c); }
+.bar { height: 10px; background: var(--sunk); border: 1px solid var(--line); position: relative; }
+.bar i { position: absolute; top: -1px; bottom: -1px; background: var(--c); }
+.bar::after { content: ""; position: absolute; left: 50%; top: -4px; bottom: -4px; width: 1px; background: var(--muted); }
+.rep-legend { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); padding-left: 10.25rem; }
+ul.plain { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.6rem; }
+ul.plain li { padding-left: 1.2rem; position: relative; }
+ul.plain li::before { content: ""; position: absolute; left: 0; top: 0.62em; width: 6px; height: 6px; background: var(--gold); }
+
+/* ---------- timeline ---------- */
+.timeline { display: grid; gap: 0; border-left: 2px solid var(--line); margin-left: 0.5rem; }
+.tl { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: 1rem; padding: 0 0 1.6rem 1.25rem; position: relative; }
+.tl::before { content: ""; position: absolute; left: -7px; top: 0.45em; width: 12px; height: 12px; background: var(--c, var(--muted)); }
+.tl .when { font-family: var(--label); color: var(--muted); }
+.tl h4 { font-size: 1.05rem; margin-bottom: 0.2rem; }
+
+/* ---------- chronicle ---------- */
+.chronicle {
+  font-family: var(--mono); font-size: 0.86rem; line-height: 1.7;
+  background: #0d0c10; color: #e8e2d6; padding: 1.25rem 1.4rem; overflow-x: auto;
+  border: 1px solid var(--line);
+}
+.chronicle .d { color: #8f8a96; }
+.chronicle .n { color: #e58c45; }
+.chronicle p { white-space: pre-wrap; }
+.chronicle p + p { margin-top: 0.2rem; }
+
+/* ---------- roadmap ---------- */
+.roadmap { display: grid; gap: 0; border: 1px solid var(--line); }
+.stage { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; gap: 1rem; padding: 1rem 1.25rem; background: var(--surface); align-items: start; }
+.stage + .stage { border-top: 1px solid var(--line); }
+.stage .num { font-family: var(--label); font-size: 1.4rem; color: var(--muted); }
+.stage h4 { font-size: 1.05rem; }
+.stage p { font-size: var(--step--1); color: var(--muted); margin-top: 0.2rem; }
+.status { font-family: var(--mono); font-size: 0.75rem; padding: 0.15rem 0.5rem; border: 1px solid currentColor; white-space: nowrap; }
+.status.done { color: var(--ok); }
+.status.now { color: var(--wip); }
+.status.next { color: var(--muted); }
+@media (max-width: 560px) { .stage { grid-template-columns: 2.2rem minmax(0, 1fr); } .stage .status { grid-column: 2; justify-self: start; } }
+
+/* ---------- ideas ---------- */
+.ideas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem 2rem; }
+.idea { display: grid; gap: 0.3rem; align-content: start; }
+.idea .tag { font-family: var(--mono); font-size: 0.72rem; color: var(--c, var(--muted)); }
+.idea h4 { font-size: 1.02rem; }
+
+/* ---------- tech ---------- */
+.tech { overflow-x: auto; border: 1px solid var(--line); }
+.tech table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: var(--step--1); background: var(--surface); }
+.tech th, .tech td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tech th { font-family: var(--label); font-weight: 600; color: var(--muted); font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.tech tr:last-child td { border-bottom: 0; }
+.results { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 2rem; }
+.results > div { background: var(--surface); padding: 1.1rem 1.25rem; display: grid; gap: 0.25rem; align-content: start; }
+.results .big { font-family: var(--head); font-size: var(--step-2); color: var(--neris); font-variant-numeric: tabular-nums; }
+.results .muted { font-size: var(--step--1); }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--sunk); padding: 0.05rem 0.3rem; }
+
+footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); }
+</style>
+
+<nav class="top" aria-label="Разделы">
+  <div class="wrap">
+    <a class="brand" href="#top">World Between</a>
+    <a href="#idea">Идея</a>
+    <a href="#peoples">Три народа</a>
+    <a href="#relations">Отношения</a>
+    <a href="#engine">Как это работает</a>
+    <a href="#player">Игрок</a>
+    <a href="#roadmap">План</a>
+    <a href="#ideas">Идеи</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap hero-grid">
+    <span class="eyebrow">Мод для Minecraft 1.21.1 · Fabric</span>
+    <h1>World <span class="between">Between</span></h1>
+    <p class="lead column">Мир делят три народа. Они растут, добывают ресурсы, строят и воюют, даже когда рядом нет ни одного игрока. Ты не их герой и не их король. Ты выживаешь между ними.</p>
+    <div class="chips">
+      <span class="chip live">в разработке · v0.1</span>
+      <span class="chip">ядро и экономика Нерис работают</span>
+      <span class="chip">Minecraft 1.21.1</span>
+      <span class="chip">Fabric Loader 0.17</span>
+      <span class="chip">Java 21</span>
+      <span class="chip">клиент + сервер</span>
+    </div>
+  </div>
+  <figure class="wrap diorama" aria-label="Пиксельная панорама мира: слева равнины Нерис с замком и адским порталом, в центре горы Каментов со стеной и высеченным ликом, справа океан Арков с городом на сваях, небесным островом и падающими кометами">
+    <canvas id="diorama" width="384" height="150"></canvas>
+    <figcaption>
+      <span style="color: var(--neris)">Равнины · Нерис</span>
+      <span style="color: var(--kament)">Горы · Каменты</span>
+      <span style="color: var(--arki)">Океан и небо · Арки</span>
+    </figcaption>
+  </figure>
+</header>
+
+<main>
+<section id="idea">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Идея</span>
+      <h2>Мир, у которого есть свои авторы</h2>
+    </header>
+    <div class="column" style="display:grid; gap:1rem; margin-bottom: 2.5rem;">
+      <p>В обычном Minecraft мир застывает там, где игрока нет. Чанки за пределами видимости лежат на диске и не меняются годами. World Between это исправляет. Мир меняется постоянно, и у каждой перемены есть причина: кто-то построил крепость, прорыл туннель или основал город на воде.</p>
+      <p>В большинстве модов про поселения фракции работают <em>на</em> игрока. Здесь у фракций свои планы, и игрок в них лишь одна из переменных. Можно торговать, помогать, вредить и стравливать, но присоединиться нельзя. Через сто игровых дней один мир будет выглядеть совсем не так, как другой.</p>
+    </div>
+    <div class="principles">
+      <div class="principle">
+        <h4>Мир живёт без тебя</h4>
+        <p class="muted">Фракции развиваются по всей карте, а не только рядом с игроком. Вернёшься через неделю и увидишь новые стены, дороги и города.</p>
+      </div>
+      <div class="principle">
+        <h4>Три слоя мира</h4>
+        <p class="muted">Каждый народ владеет своей стихией: равнины и ад, океан и небо, горы и недра. Границы проходят там, где стихии встречаются.</p>
+      </div>
+      <div class="principle">
+        <h4>Ты между ними</h4>
+        <p class="muted">Игрок не вступает во фракции. У него есть репутация у каждого народа, торговля и небольшие услуги. Выживать приходится, лавируя.</p>
+      </div>
+      <div class="principle">
+        <h4>Угроза растёт</h4>
+        <p class="muted">Фракции переходят из эпохи в эпоху. Стражник Нерис на десятый день просто неприятен, а на двухсотый носит сталь и незерит.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="peoples">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Три народа</span>
+      <h2>Кто делит этот мир</h2>
+    </header>
+
+    <article class="people c-neris" id="neris">
+      <div class="people-head">
+        <canvas class="emblem" data-emblem="neris" width="16" height="16" role="img" aria-label="Герб Нерис: наковальня под пламенем"></canvas>
+        <div>
+          <span class="eyebrow">Народ I · равнины и ад</span>
+          <h3>Королевство Нерис</h3>
+          <p class="motto">«Огонь, который жёг нас, теперь служит нам»</p>
+        </div>
+      </div>
+      <div class="people-body">
+        <div class="lore">
+          <p>Нерис — бывшие рабы <strong>Кузнецов ада</strong>, древней расы, которая когда-то создала ифритов и правила Нижним миром, а потом утратила своё могущество. Поколения Нерис трудились в адских кузнях. Однажды они вырвались через портал в Верхний мир.</p>
+          <p>Внешне они больше всех похожи на людей: бронзовая, закалённая жаром кожа и чёрные глаза, привыкшие к свету лавы. Из рабства они вынесли дисциплину, умение работать и ненависть к цепям. Теперь они строят собственную империю: замки, хорошо вооружённую армию и выверенную промышленность.</p>
+          <p>У них две цели: захватить Верхний мир и вернуться в ад уже завоевателями. Там они воюют со всей адской фауной.</p>
+        </div>
+        <dl class="facts">
+          <div><dt>Земли</dt><dd>Равнины, луга, леса, саванны; позже Нижний мир</dd></div>
+          <div><dt>Сила</dt><dd>Промышленность, армия, порядок</dd></div>
+          <div><dt>Слабость</dt><dd>Огромный расход ресурсов, растянутая логистика, война на два мира</dd></div>
+          <div><dt>Рост</dt><dd>Сплошная территория: форты, соединённые дорогами</dd></div>
+          <div><dt>К руде</dt><dd>Основа всей экономики</dd></div>
+          <div><dt>Эпохи</dt><dd>Изгнание → Бронза → Железо → Сталь → Адская кампания</dd></div>
+        </dl>
+      </div>
+      <div class="mechanics">
+        <div class="mechanic"><h4>Производственные цепочки</h4><p>Шахта кормит плавильню, плавильня кузню, кузня арсенал. Разрушь одно звено, и армия Нерис со временем получит хуже вооружённых солдат.</p></div>
+        <div class="mechanic"><h4>Замки как узлы власти</h4><p>Каждая крепость держит радиус вокруг себя. Расширяются Нерис фортами на границе, а потом связывают их дорогами.</p></div>
+        <div class="mechanic"><h4>Законы и звания</h4><p>На их земле нельзя воровать, ломать постройки и нападать на граждан. У отряда есть командир; без него отряд теряет порядок.</p></div>
+        <div class="mechanic"><h4>Война на два мира</h4><p>Укреплённые порталы и форпосты в аду, где добывают незерит. Это делает Нерис самыми сильными и одновременно распыляет их силы.</p></div>
+        <div class="mechanic"><h4>Освобождённые пленники</h4><p>В аду игрок может найти сородичей Нерис в цепях и освободить их. Это самый быстрый путь к уважению королевства.</p></div>
+        <div class="mechanic"><h4>Тень тирании</h4><p>Если империя станет слишком большой, она рискует превратиться в то, от чего бежала: начнутся восстания и расколы.</p></div>
+      </div>
+    </article>
+
+    <article class="people c-arki" id="arki">
+      <div class="people-head">
+        <canvas class="emblem" data-emblem="arki" width="16" height="16" role="img" aria-label="Герб Арков: комета со звёздным хвостом"></canvas>
+        <div>
+          <span class="eyebrow">Народ II · океан и небо</span>
+          <h3>Арки</h3>
+          <p class="motto">«Мы пришли с неба и туда вернёмся»</p>
+        </div>
+      </div>
+      <div class="people-body">
+        <div class="lore">
+          <p>Арки спустились на землю на кометах. Это немногочисленный, древний и учёный народ, владеющий космической магией. Местную жизнь они изучают с вежливым и холодным любопытством.</p>
+          <p>Они занимают то, что в Minecraft всегда пустовало: океаны и небо. Их города стоят на воде, обсерватории парят над облаками, а на огромные расстояния они перемещаются в кометных капсулах. Новая колония Арков может появиться в любой точке мира буквально за ночь.</p>
+        </div>
+        <dl class="facts">
+          <div><dt>Земли</dt><dd>Океаны, побережья, небо (высота 180–300)</dd></div>
+          <div><dt>Сила</dt><dd>Магия, мобильность, атаки сверху</dd></div>
+          <div><dt>Слабость</dt><dd>Мало бойцов; бессильны под землёй и в аду</dd></div>
+          <div><dt>Рост</dt><dd>Архипелаг точек по всему миру</dd></div>
+          <div><dt>Ресурс</dt><dd>Звёздный свет, аметист</dd></div>
+          <div><dt>К руде</dt><dd>Металл приходит к ним сам, с кометами</dd></div>
+        </dl>
+      </div>
+      <div class="mechanics">
+        <div class="mechanic"><h4>Кометные капсулы</h4><p>В небе видна летящая комета, затем удар, кратер и капсула, из которой выходят колонисты. Самое узнаваемое событие мира.</p></div>
+        <div class="mechanic"><h4>Города на воде</h4><p>Платформы на сваях и кристаллических опорах. Армиям Нерис туда трудно добраться, а Каменты просто тонут.</p></div>
+        <div class="mechanic"><h4>Контроль неба</h4><p>Небесные острова, парящие стражи и, при плохих отношениях, запрет на полёты на элитрах над их землями.</p></div>
+        <div class="mechanic"><h4>Ночная сила</h4><p>Магия Арков питается звёздным светом. Ночью и при определённых фазах луны они заметно сильнее.</p></div>
+        <div class="mechanic"><h4>Перелёт как услуга</h4><p>Другу Арки могут отправить в капсуле на другой конец мира. В огромных мирах это одна из самых ценных наград.</p></div>
+        <div class="mechanic"><h4>Изучение чужаков</h4><p>Враждебные Арки не нападают в лоб: они следят, накладывают эффекты и телепортируют.</p></div>
+      </div>
+    </article>
+
+    <article class="people c-kament" id="kament">
+      <div class="people-head">
+        <canvas class="emblem" data-emblem="kament" width="16" height="16" role="img" aria-label="Герб Каментов: высеченный каменный лик"></canvas>
+        <div>
+          <span class="eyebrow">Народ III · горы и недра</span>
+          <h3>Каменты</h3>
+          <p class="motto">«Гора помнит всё»</p>
+        </div>
+      </div>
+      <div class="people-body">
+        <div class="lore">
+          <p>Каменты — ожившие разумные каменные големы. Они живут в горах и под землёй, спокойны и монументальны. Решают медленно, но навсегда, и ни друзей, ни обид не забывают.</p>
+          <p>Их призвание — величественные постройки и стены. Руду они считают кровью горы, а того, кто её добывает, презирают. Это вечный конфликт с Нерис, чья империя стоит на металле.</p>
+        </div>
+        <dl class="facts">
+          <div><dt>Земли</dt><dd>Горы, пики, глубокие пещеры</dd></div>
+          <div><dt>Сила</dt><dd>Прочность, стены, монументы</dd></div>
+          <div><dt>Слабость</dt><dd>Медленны, тонут в воде, почти не восстанавливают население</dd></div>
+          <div><dt>Рост</dt><dd>Медленно, но то, что построено, стоит вечно</dd></div>
+          <div><dt>Ресурс</dt><dd>Камень: каменоломни, а не шахты</dd></div>
+          <div><dt>К руде</dt><dd>Святотатство</dd></div>
+        </dl>
+      </div>
+      <div class="mechanics">
+        <div class="mechanic"><h4>Запрет на руду</h4><p>Добыча руды на их земле обрушивает репутацию. Позже они станут холоднее даже к тем, кто носит слишком много железа.</p></div>
+        <div class="mechanic"><h4>Каменный путь</h4><p>Другу Каменты дают зачарованные инструменты и броню из камня, сравнимые с металлом. Игру можно пройти, почти не трогая руду.</p></div>
+        <div class="mechanic"><h4>Великие стены</h4><p>Со временем стены перекрывают долины и перевалы. Маршруты игрока и других фракций меняются.</p></div>
+        <div class="mechanic"><h4>Монументы</h4><p>Статуи, залы и лики, высеченные в скалах. Они дают фракции влияние и растут медленно, у всех на глазах.</p></div>
+        <div class="mechanic"><h4>Пробуждение</h4><p>Каменты не рождаются, их высекают и пробуждают ритуалом. Каждая потеря для народа долгая рана.</p></div>
+        <div class="mechanic"><h4>Целители гор</h4><p>Каменты способны залечивать выработанные жилы и возвращать руду в горы. Это прямой противовес шахтам Нерис.</p></div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="relations">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Отношения</span>
+      <h2>Неустойчивый треугольник</h2>
+      <p class="column muted">Между двумя силами игрок просто выбирает сторону. Между тремя появляется политика: можно поддержать слабого против сильного, торговать с одними и вредить другим.</p>
+    </header>
+    <div class="rel-grid">
+      <svg class="triangle" viewBox="0 0 520 440" role="img" aria-label="Треугольник отношений: Нерис против Каментов — война, Нерис и Арки — спор за землю и небо, Арки и Каменты — холодный нейтралитет">
+        <line x1="260" y1="70" x2="90" y2="360" stroke="var(--line)" stroke-width="3" stroke-dasharray="10 7"></line>
+        <line x1="260" y1="70" x2="430" y2="360" stroke="var(--neris)" stroke-width="5"></line>
+        <line x1="90" y1="360" x2="430" y2="360" stroke="var(--line)" stroke-width="3" stroke-dasharray="3 7"></line>
+        <rect x="200" y="40" width="120" height="60" fill="var(--surface)" stroke="var(--neris)" stroke-width="2"></rect>
+        <text x="260" y="77" text-anchor="middle" font-size="20" fill="var(--neris)">Нерис</text>
+        <rect x="30" y="330" width="120" height="60" fill="var(--surface)" stroke="var(--arki)" stroke-width="2"></rect>
+        <text x="90" y="367" text-anchor="middle" font-size="20" fill="var(--arki)">Арки</text>
+        <rect x="370" y="330" width="120" height="60" fill="var(--surface)" stroke="var(--kament)" stroke-width="2"></rect>
+        <text x="430" y="367" text-anchor="middle" font-size="20" fill="var(--kament)">Каменты</text>
+        <text x="378" y="200" text-anchor="middle" font-size="16" fill="var(--neris)" transform="rotate(59.6 378 200)">война за горы и руду</text>
+        <text x="142" y="200" text-anchor="middle" font-size="16" fill="var(--muted)" transform="rotate(-59.6 142 200)">спор за землю и небо</text>
+        <text x="260" y="410" text-anchor="middle" font-size="16" fill="var(--muted)">холодный нейтралитет</text>
+      </svg>
+      <div class="axes">
+        <div class="axis hot">
+          <h4>Нерис и Каменты</h4>
+          <span class="heat">напряжение: максимальное</span>
+          <p>Промышленность Нерис стоит на руде, руда лежит в горах, а горы принадлежат Каментам. Предгорья станут самым опасным местом мира.</p>
+        </div>
+        <div class="axis">
+          <h4>Нерис и Арки</h4>
+          <span class="heat">напряжение: растущее</span>
+          <p>Нерис хотят весь Верхний мир, включая побережья. Против небесных стражей Арков стены замков бесполезны. Зато в ад, куда идут Нерис, Арки последовать не могут.</p>
+        </div>
+        <div class="axis">
+          <h4>Арки и Каменты</h4>
+          <span class="heat">напряжение: низкое</span>
+          <p>Их стихии почти не пересекаются, возможен союз против Нерис. Но кометы приносят метеоритное железо, и капсула, упавшая в священных горах, может всё испортить.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="engine">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Как это работает</span>
+      <h2>Как мир живёт без игрока</h2>
+      <p class="column muted">Minecraft обрабатывает только чанки рядом с игроками. Держать загруженным весь мир невозможно, поэтому симуляция работает на трёх уровнях, и каждый следующий уровень дороже и подробнее предыдущего.</p>
+    </header>
+    <div class="layers">
+      <div class="layer">
+        <div><div class="where">всегда · весь мир</div><div class="scale">раз в игровой день</div></div>
+        <div>
+          <h4>Абстрактный слой</h4>
+          <p>Фракции живут в числах: население, склад ресурсов, постройки, эпоха, отношения. Каждый игровой день народ «думает»: что строить, где расширяться, на кого напасть. Битва армий вдали от игрока — это расчёт сил, а не драка сотен мобов. Места для новых поселений выбираются прямо из генератора мира, без загрузки чанков.</p>
+        </div>
+      </div>
+      <div class="layer">
+        <div><div class="where">при загрузке чанка</div><div class="scale">один раз, порциями</div></div>
+        <div>
+          <h4>Материализация</h4>
+          <p>Когда игрок приходит в место, где по модели «уже построено 60% башни», мод ставит 60% блоков по шаблону. Прорытые туннели вырезаются по сохранённому плану, захваченные земли получают нужные блоки. Изменения применяются частями, чтобы при входе в старый регион не было фризов.</p>
+        </div>
+      </div>
+      <div class="layer">
+        <div><div class="where">рядом с игроком</div><div class="scale">каждый тик</div></div>
+        <div>
+          <h4>Живой слой</h4>
+          <p>Появляются настоящие существа: стража обходит стены, рабочие строят на глазах, отряды выходят в набег. Их число ограничено, остальные продолжают существовать в виде чисел.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="chain-wrap" role="img" aria-label="Производственная цепочка Нерис: шахта даёт руду, плавильня превращает её в металл, кузня делает снаряжение, казармы превращают жителей в солдат. Фермы кормят всех.">
+      <div class="chain">
+        <div class="node">Шахта<small>+3 руды</small></div>
+        <span class="arrow">→</span>
+        <div class="node">Плавильня<small>4 руды → 2 металла</small></div>
+        <span class="arrow">→</span>
+        <div class="node">Кузня<small>3 металла → 1 комплект</small></div>
+        <span class="arrow">→</span>
+        <div class="node">Казармы<small>житель + комплект → солдат</small></div>
+        <span class="arrow">→</span>
+        <div class="node">Армия<small>ест в 1,5 раза больше</small></div>
+      </div>
+      <p class="chain-note">Так выглядит один день экономики Нерис в текущей версии. Каждая постройка требует рабочих; рабочих сначала ставят на фермы, потом на сырьё, потом на промышленность. Свободные руки уходят на стройку. Узкое место инженеры Нерис закрывают первым: не хватает еды — строят ферму, тесно — дом.</p>
+    </div>
+  </div>
+</section>
+
+<section id="player">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Игрок</span>
+      <h2>Чужой для всех</h2>
+    </header>
+    <div class="two">
+      <div style="display:grid; gap:1rem;">
+        <p>Игрок не может вступить ни в одну фракцию. У него есть репутация у каждого народа, от −100 до +100. Она открывает торговлю и услуги, а при падении — патрули, засады и налёты.</p>
+        <ul class="plain">
+          <li>Продал руду Нерис — Каменты это запомнят.</li>
+          <li>Помог Каментам отстоять перевал — Нерис остались без металла.</li>
+          <li>Подружился с Арками — получил перелёты в капсуле между фронтами.</li>
+          <li>Можно держать всех в равновесии, чтобы никто не стал слишком сильным.</li>
+        </ul>
+        <p class="muted">Уничтожить фракцию можно, но это очень трудно и требует легендарного деяния. Обычной войной народ не стереть.</p>
+      </div>
+      <div class="rep" aria-label="Пример репутации игрока">
+        <span class="eyebrow">Пример: репутация на 60-й день</span>
+        <div class="rep-row c-neris"><span class="label">Нерис</span><div class="bar"><i style="left:50%; width:21%"></i></div></div>
+        <div class="rep-row c-arki"><span class="label">Арки</span><div class="bar"><i style="left:50%; width:7%"></i></div></div>
+        <div class="rep-row c-kament"><span class="label">Каменты</span><div class="bar"><i style="left:19%; width:31%"></i></div></div>
+        <div class="rep-legend"><span>−100</span><span>0</span><span>+100</span></div>
+        <p class="muted" style="font-size: var(--step--1);">Этот игрок много копал и торговал металлом с Нерис. Арки к нему почти равнодушны, Каменты враждебны.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="dawn">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Начало мира</span>
+      <h2>Первые дни</h2>
+      <p class="column muted">Первые дни фракций в мире нет, игрок может спокойно обжиться. Потом каждый народ приходит по-своему.</p>
+    </header>
+    <div class="timeline column">
+      <div class="tl"><span class="when">Дни 0–2</span><div><h4>Тишина</h4><p>Обычный Minecraft. Игрок строит первое убежище.</p></div></div>
+      <div class="tl c-neris" style="--c: var(--neris)"><span class="when">День 3</span><div><h4>Портал на равнине</h4><p>Вспыхивает адский портал, из него выходят беглецы Нерис и разбивают первый лагерь.</p></div></div>
+      <div class="tl c-arki" style="--c: var(--arki)"><span class="when">Ночь ~5</span><div><h4>Первая комета</h4><p>Над океаном пролетает комета. Утром на воде стоит капсула Арков.</p></div></div>
+      <div class="tl c-kament" style="--c: var(--kament)"><span class="when">День ~7</span><div><h4>Гора открывает глаза</h4><p>Утёс в горах оказывается спящим гигантом. Каменты пробуждаются.</p></div></div>
+      <div class="tl"><span class="when">Дальше</span><div><h4>История мира</h4><p>Её пишут три народа, а игрок может лишь подтолкнуть её в ту или иную сторону.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="chronicle">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Летопись</span>
+      <h2>Мир рассказывает о себе</h2>
+      <p class="column muted">Всё важное попадает в летопись мира и объявляется в чате. Так игрок узнаёт о событиях, даже если был за тысячу блоков. Ниже — то, что Нерис сделали за 200 дней в тестовом мире, где не было ни одного игрока.</p>
+    </header>
+    <div class="chronicle" id="chronicle-log" aria-label="Летопись тестового мира">
+      <p><span class="d">[День 3]</span> <span class="n">Королевство Нерис:</span> Из адского портала вышли беглецы — бывшие рабы Кузнецов ада. Они разбили лагерь Ushar у (-529, 701).</p>
+      <p><span class="d">[День 4]</span> <span class="n">Королевство Нерис:</span> В Ushar распахали первое поле. Бывшие рабы впервые едят хлеб, выращенный своими руками.</p>
+      <p><span class="d">[День 24]</span> <span class="n">Королевство Нерис:</span> Лагерь Ushar вырос в поселение.</p>
+      <p><span class="d">[День 47]</span> <span class="n">Королевство Нерис:</span> В Ushar заложили первую шахту. Нерис снова под землёй — но теперь по своей воле.</p>
+      <p><span class="d">[День 52]</span> <span class="n">Королевство Нерис:</span> Поселение Ushar обнесено стенами и стало фортом.</p>
+      <p><span class="d">[День 52]</span> <span class="n">Королевство Нерис:</span> Поселенцы из Ushar основали новое поселение Gahuld у (-415, 895).</p>
+      <p><span class="d">[День 57]</span> <span class="n">Королевство Нерис:</span> В Ushar зажгли первую плавильню. Огонь, что когда-то жёг их, теперь им служит.</p>
+      <p><span class="d">[День 66]</span> <span class="n">Королевство Нерис:</span> В Ushar выковали первый клинок. Кузнецы ада учили их не зря.</p>
+      <p><span class="d">[День 80]</span> <span class="n">Королевство Нерис:</span> В Ushar построены первые казармы. Королевство Нерис собирает армию.</p>
+      <p><span class="d">[День 128]</span> <span class="n">Королевство Нерис:</span> Королевство Нерис вступило в Бронзовый век.</p>
+      <p><span class="d">[День 165]</span> <span class="n">Королевство Нерис:</span> Над Marun поднялись башни замка.</p>
+      <p><span class="d">[День 165]</span> <span class="n">Королевство Нерис:</span> Королевство Нерис вступило в Железный век. Их стража теперь носит железо.</p>
+      <p><span class="d">[День 200]</span> <span class="n">Королевство Нерис:</span> Поселенцы из Belek-Om основали новое поселение Omar-Ish у (-705, 1091).</p>
+    </div>
+    <p class="muted" style="font-size: var(--step--1); margin-top: 0.75rem;">Выдержка из настоящей летописи тестового мира (зерно <code>20261024</code>, 200 дней, выделенный сервер). В каждом мире история своя.</p>
+
+    <div class="results" aria-label="Итог тестового прогона на 200-й день">
+      <div><span class="big">8 → 735</span><span class="muted">жителей с 3-го по 200-й день</span></div>
+      <div><span class="big">15</span><span class="muted">поселений: 1 замок, 11 фортов, 1 поселение, 2 лагеря</span></div>
+      <div><span class="big">61</span><span class="muted">солдат в армии</span></div>
+      <div><span class="big">≈11 мс</span><span class="muted">на один игровой день симуляции</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">План разработки</span>
+      <h2>Дорожная карта</h2>
+    </header>
+    <div class="roadmap">
+      <div class="stage"><span class="num">1</span><div><h4>Каркас и ядро симуляции</h4><p>Проект Fabric, сохранение состояния мира, игровой день симуляции, летопись, конфиг, команда <code>/wb</code>.</p></div><span class="status done">готово</span></div>
+      <div class="stage"><span class="num">2</span><div><h4>Экономика Нерис</h4><p>Население, ресурсы, производственные цепочки, строительство, ярусы поселений, эпохи, расширение. Первая версия работает, баланс ещё настраивается: сейчас королевство расширяется слишком быстро.</p></div><span class="status done">первая версия</span></div>
+      <div class="stage"><span class="num">3</span><div><h4>Материализация</h4><p>Шаблоны построек Нерис, постановка блоков при загрузке чанка, адский портал прибытия.</p></div><span class="status now">следующий шаг</span></div>
+      <div class="stage"><span class="num">4</span><div><h4>Существа Нерис</h4><p>Модели, текстуры и ИИ: жители, рабочие, стража, командиры.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">5</span><div><h4>Репутация и торговля</h4><p>Отношение к каждому игроку, законы на территории, торговцы, контракты.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">6</span><div><h4>Адская кампания</h4><p>Форпосты Нерис в Нижнем мире, война с адской фауной, незерит.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">7</span><div><h4>Каменты</h4><p>Пробуждение, каменоломни, стены, монументы, запрет на руду.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">8</span><div><h4>Арки</h4><p>Кометные капсулы, города на воде, небесные острова, звёздная магия.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">9</span><div><h4>Войны и легендарные деяния</h4><p>Конфликты фракций, осады, падение народов, баланс и оптимизация.</p></div><span class="status next">дальше</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="ideas">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Банк идей</span>
+      <h2>Что ещё может появиться</h2>
+      <p class="column muted">Идеи, которые обсуждались, но ещё не закреплены в дизайне.</p>
+    </header>
+    <div class="ideas">
+      <div class="idea c-neris"><span class="tag">нерис</span><h4>Цепи Кузнецов ада</h4><p>Руины адских кузниц, где Нерис когда-то были рабами. В них лежат сведения о прошлом и, может быть, о том, как пала раса хозяев.</p></div>
+      <div class="idea c-neris"><span class="tag">нерис</span><h4>Бронза как свой металл</h4><p>Отдельный сплав для ранней армии Нерис, чтобы их снаряжение было узнаваемым.</p></div>
+      <div class="idea c-arki"><span class="tag">арки</span><h4>Метеоритные дожди</h4><p>Ночи, когда Арки сильнее всего, а с неба падают обломки со звёздным металлом.</p></div>
+      <div class="idea c-arki"><span class="tag">арки</span><h4>Звёздные карты</h4><p>Предмет, который показывает, где упадёт следующая комета.</p></div>
+      <div class="idea c-kament"><span class="tag">каменты</span><h4>Говорящие монументы</h4><p>Статуи, которые помнят события летописи и пересказывают их игроку.</p></div>
+      <div class="idea c-kament"><span class="tag">каменты</span><h4>Обвалы</h4><p>Шахты, вырытые в землях Каментов, со временем рушатся.</p></div>
+      <div class="idea"><span class="tag">мир</span><h4>Карта влияния</h4><p>Предмет или экран, на котором видны границы трёх народов и как они менялись.</p></div>
+      <div class="idea"><span class="tag">мир</span><h4>Гонцы и слухи</h4><p>Странники, которые приносят игроку вести из дальних краёв.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="tech">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Под капотом</span>
+      <h2>Технические основы</h2>
+    </header>
+    <div class="tech">
+      <table>
+        <thead><tr><th>Часть</th><th>Решение</th><th>Зачем</th></tr></thead>
+        <tbody>
+          <tr><td>Платформа</td><td>Minecraft 1.21.1, Fabric Loader 0.17, Fabric API, Yarn</td><td>Лёгкий загрузчик, быстрые обновления</td></tr>
+          <tr><td>Состояние мира</td><td><code>PersistentState</code> в данных Верхнего мира</td><td>Фракции, поселения и летопись сохраняются вместе с миром</td></tr>
+          <tr><td>Часы симуляции</td><td>Один шаг на игровой день, не больше 4 шагов за тик</td><td>Сон и <code>/time</code> не роняют сервер</td></tr>
+          <tr><td>Выбор мест</td><td>Биомы и высота из генератора мира</td><td>Расширение в неисследованные земли без загрузки чанков</td></tr>
+          <tr><td>Случайность</td><td>Зерно мира × номер дня</td><td>Одно и то же зерно рассказывает одну и ту же историю</td></tr>
+          <tr><td>Тексты</td><td>Ключи перевода, ru_ru и en_us</td><td>Летопись читается на языке игрока</td></tr>
+          <tr><td>Отладка</td><td><code>/wb status</code>, <code>faction</code>, <code>chronicle</code>, <code>simulate</code>, <code>arrive</code></td><td>Перемотать сто дней истории за секунду</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">World Between · мод в разработке для Minecraft 1.21.1 (Fabric). Minecraft — торговая марка Mojang; проект с Mojang не связан.</div>
+</footer>
+
+<script>
+(() => {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- emblems ----------
+  const EMBLEMS = {
+    neris: {
+      pal: { f: '#ffd166', o: '#f08a24', r: '#b8401a', a: '#5d5a63', d: '#38363d', h: '#8b8792' },
+      px: [
+        '................',
+        '.......f........',
+        '......ff.f......',
+        '.....fof.ff.....',
+        '....foof.off....',
+        '....fooroof.....',
+        '.....orrroo.....',
+        '......rrr.......',
+        '..hhhhhhhhhhhh..',
+        '.aaaaaaaaaaaaah.',
+        '..daaaaaaaaaad..',
+        '.....aaaaaa.....',
+        '.....daaaad.....',
+        '....aaaaaaaa....',
+        '...dddddddddd...',
+        '................'
+      ]
+    },
+    arki: {
+      pal: { w: '#ffffff', c: '#a9d4ff', b: '#5f8cff', v: '#8a5cf0', s: '#d8e6ff' },
+      px: [
+        '..s.............',
+        '..........s.....',
+        '...........wcc..',
+        '..........wwccb.',
+        '.........wwwcbb.',
+        '........cwwcbb..',
+        '.......ccccbb...',
+        '......cbbbb.....',
+        '.....bbbv.......',
+        '....bbv....s....',
+        '...bvv..........',
+        '..vv............',
+        '.vv.....s.......',
+        '.v..............',
+        '...........s....',
+        '................'
+      ]
+    },
+    kament: {
+      pal: { l: '#b8b4ac', m: '#8f8a82', d: '#5f5b55', k: '#3c3935', e: '#7fe0c4', g: '#6c8f4a' },
+      px: [
+        '....gg..........',
+        '...gmmmmmmmm....',
+        '..mmllllllllmm..',
+        '..mlllllllllldm.',
+        '..mlkkklllkkkdm.',
+        '..mlkekllllkekdm',
+        '..mlkkklllkkkdm.',
+        '..mlllllmlllldm.',
+        '..mllllmmmlllddm',
+        '..mlllllmllllldm',
+        '..mldkkkkkkkdldm',
+        '..mlllllllllldm.',
+        '..mmldddddddmm..',
+        '...mmmmmmmmmm...',
+        '..dddddddddddd..',
+        '................'
+      ]
+    }
+  };
+  document.querySelectorAll('canvas[data-emblem]').forEach(cv => {
+    const e = EMBLEMS[cv.dataset.emblem];
+    const g = cv.getContext('2d');
+    e.px.forEach((row, y) => [...row].forEach((ch, x) => {
+      if (ch !== '.') { g.fillStyle = e.pal[ch]; g.fillRect(x, y, 1, 1); }
+    }));
+  });
+
+  // ---------- diorama ----------
+  const cv = document.getElementById('diorama');
+  const g = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  let seed = 1337;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const px = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x | 0, y | 0, w, h); };
+
+  const SEA = 112;
+  // Terrain height per column: plains, then mountains, then the ocean floor.
+  const ground = [];
+  for (let x = 0; x < W; x++) {
+    let h;
+    if (x < 128) h = 104 + Math.round(Math.sin(x / 9) * 1.5 + Math.sin(x / 23) * 2);
+    else if (x < 256) {
+      const t = (x - 128) / 128;
+      const peak = Math.max(0, 1 - Math.abs(t - 0.38) * 3.2) * 62 + Math.max(0, 1 - Math.abs(t - 0.72) * 4) * 44;
+      h = 104 - peak + Math.round(Math.sin(x / 3.1) * 1.5);
+      if (x > 236) h = Math.min(130, h + (x - 236) * 1.3);
+    } else h = 132 + Math.round(Math.sin(x / 7) * 2);
+    ground.push(Math.round(h));
+  }
+
+  const stars = Array.from({ length: 70 }, () => [rnd() * W, rnd() * 70, rnd()]);
+  const ores = Array.from({ length: 40 }, () => [128 + rnd() * 110, 0, rnd() < 0.5 ? '#d9d3c4' : '#7fd6e8']);
+  ores.forEach(o => { o[1] = ground[o[0] | 0] + 10 + rnd() * 30; });
+
+  function sky() {
+    const bands = ['#0b0a14', '#100e1d', '#161327', '#1d1932', '#26203b', '#2f2741'];
+    for (let i = 0; i < bands.length; i++) px(0, i * 18, W, 18, bands[i]);
+    px(0, 108, W, H, '#2f2741');
+  }
+
+  function drawStars(t) {
+    for (const [x, y, p] of stars) {
+      const tw = reduce ? 1 : 0.5 + 0.5 * Math.sin(t / 600 + p * 20);
+      if (tw > 0.35) px(x, y, 1, 1, p > 0.85 ? '#ffffff' : '#a7a3c7');
+    }
+    // moon
+    px(300, 14, 8, 8, '#e9e4d0'); px(302, 16, 2, 2, '#cfc8ad'); px(305, 19, 1, 1, '#cfc8ad');
+  }
+
+  function terrain() {
+    for (let x = 0; x < W; x++) {
+      const h = ground[x];
+      if (x < 128) {
+        px(x, h, 1, 1, '#5fae3d'); px(x, h + 1, 1, 3, '#7a5432'); px(x, h + 4, 1, H, '#57545c');
+      } else if (x < 256) {
+        px(x, h, 1, H, '#77737a');
+        if (h < 62) px(x, h, 1, 3, '#eef1f5');
+        else if (h < 95 && (x % 5 === 0)) px(x, h, 1, 1, '#8d8990');
+        px(x, h + 8, 1, H, '#615d64');
+      } else {
+        px(x, h, 1, H, '#c9b98a');
+      }
+    }
+    // ore veins left untouched in Kament mountains
+    for (const [x, y, c] of ores) if (y < H - 2) px(x, y, 1, 1, c);
+    // deep layer
+    px(0, 138, W, H, '#3a3640');
+    for (let x = 0; x < W; x += 3) if (rnd() < 0.3) px(x, 138 + rnd() * 10, 2, 1, '#2c2931');
+  }
+
+  function water(t) {
+    for (let x = 248; x < W; x++) {
+      if (ground[x] <= SEA) continue;
+      px(x, SEA, 1, ground[x] - SEA, '#1f4f8f');
+      const wave = reduce ? 0 : Math.sin(x / 4 + t / 500) > 0.6;
+      px(x, SEA, 1, 1, wave ? '#9cc7ff' : '#3d78c2');
+    }
+  }
+
+  function neris(t) {
+    // Nether portal
+    px(10, 88, 10, 16, '#1b1426');
+    px(12, 90, 6, 14, '#7b3fd4');
+    for (let i = 0; i < 4; i++) px(13 + (i % 2) * 2, 92 + i * 3, 1, 2, '#b98cff');
+    // castle
+    const by = 104;
+    px(40, by - 22, 46, 22, '#8a5a34');
+    for (let x = 40; x < 86; x += 4) px(x, by - 24, 2, 2, '#8a5a34');
+    px(34, by - 34, 10, 34, '#9c693c'); px(82, by - 34, 10, 34, '#9c693c');
+    for (let x = 34; x < 44; x += 3) px(x, by - 36, 2, 2, '#9c693c');
+    for (let x = 82; x < 92; x += 3) px(x, by - 36, 2, 2, '#9c693c');
+    px(58, by - 40, 10, 40, '#a8744a');
+    px(56, by - 42, 14, 2, '#6d4426');
+    px(62, by - 48, 1, 6, '#3b2a1e'); px(63, by - 48, 5, 3, '#e58c45');
+    px(59, by - 10, 8, 10, '#3b2a1e');
+    [[37, by - 28], [86, by - 28], [61, by - 32], [47, by - 15], [75, by - 15]].forEach(([x, y]) => px(x, y, 2, 3, '#ffb35c'));
+    // forge chimney + smoke
+    px(100, by - 14, 12, 14, '#7b4d2c'); px(106, by - 22, 3, 8, '#4d3a2c');
+    px(102, by - 8, 3, 3, '#ff8a2a');
+    for (let i = 0; i < 6; i++) {
+      const p = reduce ? i / 6 : ((t / 2400) + i / 6) % 1;
+      const sx = 107 + Math.sin(p * 6 + i) * 2 + p * 8;
+      const sy = by - 24 - p * 34;
+      px(sx, sy, 2, 2, p < 0.5 ? '#6f6a75' : '#4a4652');
+    }
+    // fields
+    for (let x = 0; x < 26; x += 2) px(112 + (x % 14), by - 1, 1, 1, '#d8c45a');
+    // mine shaft under the plains
+    px(96, by + 4, 2, 22, '#1e1b22'); px(96, by + 24, 26, 3, '#1e1b22');
+    px(97, by + 12, 1, 1, '#ffb35c');
+  }
+
+  function kament() {
+    // great wall across the saddle
+    const wx0 = 186, wx1 = 214;
+    for (let x = wx0; x < wx1; x++) {
+      const top = Math.min(ground[x], 82) - 8;
+      px(x, top, 1, ground[x] - top + 1, '#a29d93');
+      if (x % 3 === 0) px(x, top - 2, 1, 2, '#a29d93');
+      if (x % 6 === 0) px(x, top + 3, 1, 1, '#6b675f');
+    }
+    // carved face in the cliff
+    const fx = 150, fy = 66;
+    px(fx, fy, 18, 24, '#8f8a82');
+    px(fx + 3, fy + 6, 4, 3, '#2e2b28'); px(fx + 11, fy + 6, 4, 3, '#2e2b28');
+    px(fx + 4, fy + 7, 2, 1, '#7fe0c4'); px(fx + 12, fy + 7, 2, 1, '#7fe0c4');
+    px(fx + 8, fy + 10, 2, 6, '#77726a');
+    px(fx + 4, fy + 18, 10, 2, '#4d4a45');
+    // terraced quarry
+    for (let i = 0; i < 4; i++) px(222 + i * 4, ground[222] + i * 3 - 6, 10 - i * 2, 1, '#55524d');
+    // underground hall with glowing runes
+    px(160, 122, 40, 10, '#25232a');
+    for (let x = 164; x < 198; x += 8) px(x, 123, 2, 8, '#57535a');
+    px(178, 126, 2, 2, '#7fe0c4');
+  }
+
+  function arki(t) {
+    // stilt city
+    const cy = SEA;
+    for (let x = 290; x < 352; x += 10) px(x, cy - 2, 2, 22, '#6f6a7a');
+    px(284, cy - 6, 74, 4, '#d8d3e6');
+    px(296, cy - 22, 8, 16, '#c8c2dd'); px(298, cy - 30, 4, 8, '#9a7cf0');
+    px(320, cy - 30, 10, 24, '#e2ddf0'); px(322, cy - 40, 6, 10, '#7fa8ff'); px(324, cy - 46, 2, 6, '#c9e0ff');
+    px(342, cy - 18, 8, 12, '#c8c2dd'); px(344, cy - 24, 4, 6, '#9a7cf0');
+    const glow = reduce ? 1 : 0.6 + 0.4 * Math.sin(t / 400);
+    g.globalAlpha = glow; px(323, cy - 38, 4, 2, '#ffffff'); g.globalAlpha = 1;
+    [[299, cy - 14], [324, cy - 20], [345, cy - 12]].forEach(([x, y]) => px(x, y, 2, 2, '#bfe0ff'));
+    // floating sky island
+    const bob = reduce ? 0 : Math.round(Math.sin(t / 1300) * 1.2);
+    const ix = 262, iy = 36 + bob;
+    px(ix, iy, 30, 4, '#5fae3d'); px(ix + 2, iy + 4, 26, 3, '#7a5432'); px(ix + 6, iy + 7, 18, 3, '#77737a'); px(ix + 11, iy + 10, 8, 2, '#77737a');
+    px(ix + 12, iy - 14, 6, 14, '#e2ddf0'); px(ix + 13, iy - 20, 4, 6, '#7fa8ff');
+    px(ix + 14, iy + 12, 2, 1, '#9a7cf0');
+    // crater + capsule on the shore
+    px(238, ground[238] - 1, 8, 1, '#3a3236');
+    px(240, ground[240] - 5, 4, 4, '#b9c7e6'); px(241, ground[240] - 4, 2, 1, '#7fa8ff');
+  }
+
+  function comets(t) {
+    const list = [[0, 0.0], [1, 0.45], [2, 0.75]];
+    for (const [k, off] of list) {
+      const p = reduce ? 0.35 + k * 0.18 : ((t / 7000) + off) % 1;
+      if (!reduce && p > 0.7) continue;
+      const x = 150 + k * 60 + p * 120, y = 6 + k * 6 + p * 44;
+      for (let i = 0; i < 16; i++) {
+        g.globalAlpha = 1 - i / 16;
+        px(x - i * 1.6, y - i * 0.6, 2, 1, i < 3 ? '#ffffff' : (i < 8 ? '#a9d4ff' : '#8a5cf0'));
+      }
+      g.globalAlpha = 1;
+      px(x, y, 2, 2, '#ffffff');
+    }
+  }
+
+  function frame(t) {
+    seed = 1337 * 7;
+    sky(); drawStars(t); comets(t); terrain(); water(t); neris(t); kament(); arki(t);
+  }
+
+  frame(0);
+  if (!reduce) {
+    let last = 0;
+    const loop = (t) => { if (t - last > 66) { frame(t); last = t; } requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  }
+})();
+</script>
