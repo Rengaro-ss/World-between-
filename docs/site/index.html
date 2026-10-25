@@ -316,6 +316,22 @@ code { font-family: var(--mono); font-size: 0.86em; background: var(--sunk); pad
 .roles tr:last-child td { border-bottom: 0; }
 .roles td:first-child { white-space: nowrap; font-weight: 600; }
 
+
+/* ---------- court ---------- */
+.court-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.5rem; align-items: start; }
+@media (max-width: 820px) { .court-grid { grid-template-columns: minmax(0, 1fr); } }
+.hier { border: 1px solid var(--line); background: var(--surface); padding: 1.25rem; display: grid; gap: 0.9rem; justify-items: center; text-align: center; }
+.hier .king { border: 2px solid var(--gold); padding: 0.6rem 1rem; font-family: var(--head); font-size: 1.15rem; }
+.hier .king small, .hier .baron small { display: block; font-family: var(--body); font-size: 0.8rem; color: var(--muted); }
+.hier .barons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; width: 100%; }
+.hier .baron { border: 1px solid var(--line); padding: 0.5rem; font-size: 0.9rem; background: var(--bg); }
+.hier .line { width: 2px; height: 18px; background: var(--line); }
+.traits { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.4rem 1rem; font-size: var(--step--1); }
+.traits span { padding-left: 1.1rem; position: relative; }
+.traits span::before { content: ""; position: absolute; left: 0; top: 0.5em; width: 7px; height: 7px; }
+.traits .good::before { background: var(--ok); }
+.traits .bad::before { background: var(--neris); }
+
 footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); }
 </style>
 
@@ -328,6 +344,7 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
     <a href="#engine">Как это работает</a>
     <a href="#mines">Шахты</a>
     <a href="#towns">Города</a>
+    <a href="#court">Двор</a>
     <a href="#player">Игрок</a>
     <a href="#roadmap">План</a>
     <a href="#ideas">Идеи</a>
@@ -726,6 +743,62 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
   </div>
 </section>
 
+<section id="court">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Двор Нерис · работает</span>
+      <h2>Король, бароны и их характеры</h2>
+      <p class="column muted">Королевством правят люди, а не формулы. У каждого барона две черты характера и одна цель, и от них зависит, что строится в его городе, кого он любит и ненавидит, за кого голосует и не замышляет ли переворот. Один и тот же мир при короле-учёном и при короле-воителе пойдёт разными путями.</p>
+    </header>
+    <div class="court-grid">
+      <div class="hier" aria-label="Устройство власти">
+        <div class="king">Король<small>его бонус удваивается и действует на все города</small></div>
+        <div class="line"></div>
+        <div class="barons">
+          <div class="baron">Барон<small>город A: поля</small></div>
+          <div class="baron">Барон<small>город A: торговля</small></div>
+          <div class="baron">Барон<small>город B: металл</small></div>
+        </div>
+        <p class="muted" style="font-size: var(--step--1);">В каждом городе от одного до трёх баронов, смотря по богатству. Каждый ведает своей сферой и даёт ей прибавку.</p>
+      </div>
+      <div style="display:grid; gap:1rem;">
+        <h4>Когда умирает король</h4>
+        <p>На следующий день собирается совет баронов. Каждый голосует по-своему: за того, кто ему симпатичен, за сильного хозяина богатого города, за харизматика. Жадные голосуют за того, у кого толще кошелёк, честолюбивые — за себя, пьяницы могут вовсе не прийти. Проигравшие честолюбцы затаивают обиду.</p>
+        <h4>От чего умирают короли</h4>
+        <p>От старости и болезней, а ещё от заговоров: честолюбивый барон, презирающий короля, может подослать убийц. Если заговор раскроют, изменника казнят.</p>
+        <h4>Деньги — железные самородки</h4>
+        <p>Казна в самых обычных самородках железа. Налоги идут в казну города и короны, столица чеканит монету из лишнего металла, солдаты получают жалованье, а без него разбегаются. Жадные бароны тайком приворовывают.</p>
+      </div>
+    </div>
+
+    <div class="chains" style="margin-top: 2.5rem;">
+      <div><span class="label">Черты (по две у каждого)</span>
+        <div class="traits">
+          <span class="good">Трудолюбивый</span><span class="good">Мудрый</span><span class="good">Строитель</span><span class="good">Бережливый</span>
+          <span class="good">Храбрый</span><span class="good">Справедливый</span><span class="good">Помнящий цепи</span><span class="good">Харизматичный</span>
+          <span class="bad">Жадный</span><span class="bad">Ленивый</span><span class="bad">Жестокий</span><span class="bad">Трус</span>
+          <span class="bad">Пьяница</span><span class="bad">Параноик</span><span class="bad">Честолюбивый</span><span class="bad">Безрассудный</span>
+        </div>
+      </div>
+      <div><span class="label">Цели (одна у каждого)</span>
+        <p style="font-size: var(--step--1);">Обогащение · армия · наука · война · величие · расширение · месть аду · порядок. Цель определяет, что барон продвигает в своём городе, а у короля — политику всего королевства: король-учёный ускоряет эпохи, король-завоеватель чаще основывает поселения, воитель берёт в армию каждого пятого вместо седьмого.</p>
+      </div>
+      <div><span class="label">Как черты меняют мир</span>
+        <p style="font-size: var(--step--1);">Справедливый лорд даёт чужаку в шахте лишнюю минуту, жестокий и подозрительный — на минуту меньше. Ленивый вполсилы ведает своей сферой, трудолюбивый — в полторы. Бережливый король расширяет склады, жадный поднимает налоги и тормозит рост. Прозвища даются по чертам: Кровавый, Мудрый, Хмельной, Разбивший цепи.</p>
+      </div>
+    </div>
+
+    <div class="chronicle" style="margin-top: 2rem;" aria-label="Летопись двора из тестового мира">
+      <p><span class="d">[День 3]</span> <span class="n">Королевство Нерис:</span> Вождь беглецов Beleth-Tar Робкий стал первым королём Нерис. Его престол — в лагере Ushar.</p>
+      <p><span class="d">[День 124]</span> <span class="n">Королевство Нерис:</span> Rukar Безрассудный возвысился и стал бароном Ushar.</p>
+      <p><span class="d">[День 328]</span> <span class="n">Королевство Нерис:</span> Барон Belok-Ner Хмельной снова пировал без меры. Из казны и амбаров Ishath-Gah пропало немало.</p>
+      <p><span class="d">[День 600]</span> <span class="n">Королевство Нерис:</span> Король Beleth-Tar Робкий скончался от болезни в Ushar. Завтра соберётся совет баронов.</p>
+      <p><span class="d">[День 601]</span> <span class="n">Королевство Нерис:</span> Совет баронов избрал королём Miresh Сонный из Omira: 11 голосов из 45.</p>
+    </div>
+    <p class="muted" style="font-size: var(--step--1); margin-top: 0.75rem;">Выдержка из настоящей летописи тестового мира. Смерть короля на 600-й день вызвана отладочной командой, чтобы проверить совет.</p>
+  </div>
+</section>
+
 <section id="player">
   <div class="wrap">
     <header>
@@ -816,12 +889,13 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
       <div class="stage"><span class="num">2</span><div><h4>Экономика Нерис</h4><p>Население, ресурсы, производственные цепочки, строительство, ярусы поселений, эпохи, расширение. Первая версия работает, баланс ещё настраивается: сейчас королевство расширяется слишком быстро.</p></div><span class="status done">первая версия</span></div>
       <div class="stage"><span class="num">3</span><div><h4>Шахты Нерис</h4><p>Растущие шахты с тремя горизонтами, лавовыми каналами и кузней; охрана, статус преступника, метки собственности на добытом.</p></div><span class="status done">готово</span></div>
       <div class="stage"><span class="num">4</span><div><h4>Города Нерис</h4><p>Ратуши по уровням и тронный зал столицы, 4 вида домов, 20 видов зданий с реальной ролью в экономике, производственные цепочки, дороги, стены, дозорные башни, летописи в библиотеках, работа днём.</p></div><span class="status done">готово</span></div>
-      <div class="stage"><span class="num">5</span><div><h4>Существа Нерис</h4><p>Модели, текстуры и ИИ: жители, рабочие, стража, командиры. Рабочие займут уже размеченные рабочие места в зданиях.</p></div><span class="status now">следующий шаг</span></div>
-      <div class="stage"><span class="num">6</span><div><h4>Репутация и торговля</h4><p>Отношение к каждому игроку, законы на территории, торговцы, контракты.</p></div><span class="status next">дальше</span></div>
-      <div class="stage"><span class="num">7</span><div><h4>Адская кампания</h4><p>Форпосты Нерис в Нижнем мире, война с адской фауной, незерит.</p></div><span class="status next">дальше</span></div>
-      <div class="stage"><span class="num">8</span><div><h4>Каменты</h4><p>Пробуждение, каменоломни, стены, монументы, запрет на руду.</p></div><span class="status next">дальше</span></div>
-      <div class="stage"><span class="num">9</span><div><h4>Арки</h4><p>Кометные капсулы, города на воде, небесные острова, звёздная магия.</p></div><span class="status next">дальше</span></div>
-      <div class="stage"><span class="num">10</span><div><h4>Войны и легендарные деяния</h4><p>Конфликты фракций, осады, падение народов, баланс и оптимизация.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">5</span><div><h4>Двор и личности</h4><p>Король и бароны с чертами и целями, выборы, заговоры, казна в железных самородках.</p></div><span class="status done">готово</span></div>
+      <div class="stage"><span class="num">6</span><div><h4>Существа Нерис</h4><p>Модели, текстуры и ИИ: жители, рабочие, стража, командиры. Рабочие займут уже размеченные рабочие места в зданиях.</p></div><span class="status now">следующий шаг</span></div>
+      <div class="stage"><span class="num">7</span><div><h4>Репутация и торговля</h4><p>Отношение к каждому игроку, законы на территории, торговцы, контракты.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">8</span><div><h4>Адская кампания</h4><p>Форпосты Нерис в Нижнем мире, война с адской фауной, незерит.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">9</span><div><h4>Каменты</h4><p>Пробуждение, каменоломни, стены, монументы, запрет на руду.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">10</span><div><h4>Арки</h4><p>Кометные капсулы, города на воде, небесные острова, звёздная магия.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">11</span><div><h4>Войны и легендарные деяния</h4><p>Конфликты фракций, осады, падение народов, баланс и оптимизация.</p></div><span class="status next">дальше</span></div>
     </div>
   </div>
 </section>

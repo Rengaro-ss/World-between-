@@ -21,7 +21,22 @@ public record ChronicleEntry(long day, FactionType faction, String key, List<Str
 		if (faction != null) {
 			text.append(" ").append(faction.displayName()).append(Text.literal(":").formatted(Formatting.GRAY));
 		}
-		return text.append(" ").append(Text.translatable(key, args.toArray()).formatted(Formatting.WHITE));
+		return text.append(" ").append(message().formatted(Formatting.WHITE));
+	}
+
+	/**
+	 * The entry's message. An argument may end in "@key", which is shown translated: noble epithets are
+	 * stored this way so "Kar-Esh the Greedy" reads right in every language.
+	 */
+	public MutableText message() {
+		Object[] values = new Object[args.size()];
+		for (int i = 0; i < args.size(); i++) {
+			String arg = args.get(i);
+			int at = arg.indexOf(" @");
+			values[i] = at < 0 ? arg : Text.translatable("noble.worldbetween.name", arg.substring(0, at),
+					Text.translatable(arg.substring(at + 2)));
+		}
+		return Text.translatable(key, values);
 	}
 
 	public NbtCompound toNbt() {

@@ -66,7 +66,7 @@ public final class ChronicleBooks {
 			}
 			if (entry.faction() == faction.type() && entry.args().contains(settlement.name())) {
 				pages.add(RawFilteredPair.of(Text.translatable("chronicle.worldbetween.day", entry.day())
-						.append("\n\n").append(Text.translatable(entry.key(), entry.args().toArray()))));
+						.append("\n\n").append(entry.message())));
 			}
 		}
 		ItemStack current = entity.getBook();

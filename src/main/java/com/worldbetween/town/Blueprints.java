@@ -1268,9 +1268,9 @@ public final class Blueprints {
 		return new Loot(() -> item, min, max);
 	}
 
-	private static final List<Loot> HOME = List.of(loot(Items.BREAD, 2, 6), loot(Items.COAL, 2, 8), loot(Items.TORCH, 2, 8), loot(Items.APPLE, 1, 4));
-	private static final List<Loot> SUPPLIES = List.of(loot(Items.PAPER, 4, 12), loot(Items.BREAD, 4, 12), loot(Items.IRON_INGOT, 2, 6), loot(Items.MAP, 1, 1));
-	private static final List<Loot> TREASURY = List.of(loot(Items.GOLD_INGOT, 4, 12), loot(Items.IRON_INGOT, 8, 16), loot(Items.DIAMOND, 1, 3), loot(Items.EMERALD, 2, 8));
+	private static final List<Loot> HOME = List.of(loot(Items.BREAD, 2, 6), loot(Items.COAL, 2, 8), loot(Items.TORCH, 2, 8), loot(Items.APPLE, 1, 4), loot(Items.IRON_NUGGET, 1, 9));
+	private static final List<Loot> SUPPLIES = List.of(loot(Items.PAPER, 4, 12), loot(Items.BREAD, 4, 12), loot(Items.IRON_NUGGET, 8, 32), loot(Items.MAP, 1, 1));
+	private static final List<Loot> TREASURY = List.of(loot(Items.IRON_NUGGET, 32, 64), loot(Items.IRON_NUGGET, 32, 64), loot(Items.GOLD_INGOT, 4, 12), loot(Items.IRON_INGOT, 8, 16), loot(Items.DIAMOND, 1, 3));
 	private static final List<Loot> MILL_GOODS = List.of(loot(Items.WHEAT, 8, 24), loot(Items.WHEAT_SEEDS, 4, 16));
 	private static final List<Loot> BAKERY_GOODS = List.of(loot(Items.BREAD, 6, 16), loot(Items.WHEAT, 4, 12), loot(Items.CAKE, 1, 1));
 	private static final List<Loot> KITCHEN_GOODS = List.of(loot(Items.COOKED_BEEF, 4, 12), loot(Items.BAKED_POTATO, 4, 12), loot(Items.MUSHROOM_STEW, 1, 2), loot(Items.BREAD, 4, 8));

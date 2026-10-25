@@ -5,6 +5,8 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.util.math.MathHelper;
 
+import com.worldbetween.faction.court.Noble;
+
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -38,6 +40,11 @@ public class Faction {
 	private final Map<String, Long> lastEventDays = new HashMap<>();
 	/** Players declared criminals, mapped to the day it happened. */
 	private final Map<UUID, Long> criminals = new HashMap<>();
+	private final List<Noble> nobles = new ArrayList<>();
+	private int kingId = -1;
+	private int nextNobleId;
+	/** Day the council of barons meets to elect a king, or NEVER if no election is pending. */
+	private long councilDay = NEVER;
 
 	public Faction(FactionType type) {
 		this.type = type;
@@ -158,6 +165,34 @@ public class Faction {
 		reputation.put(player, MathHelper.clamp(reputation(player) + delta, MIN_REPUTATION, MAX_REPUTATION));
 	}
 
+	public List<Noble> nobles() {
+		return nobles;
+	}
+
+	public List<Noble> livingNobles() {
+		return nobles.stream().filter(Noble::isAlive).toList();
+	}
+
+	public Noble king() {
+		return nobles.stream().filter(n -> n.id() == kingId && n.isAlive()).findFirst().orElse(null);
+	}
+
+	public void setKing(Noble noble) {
+		this.kingId = noble == null ? -1 : noble.id();
+	}
+
+	public int nextNobleId() {
+		return nextNobleId++;
+	}
+
+	public long councilDay() {
+		return councilDay;
+	}
+
+	public void setCouncilDay(long day) {
+		this.councilDay = day;
+	}
+
 	public boolean isCriminal(UUID player) {
 		return criminals.containsKey(player);
 	}
@@ -217,6 +252,13 @@ public class Faction {
 		NbtCompound criminalsNbt = new NbtCompound();
 		criminals.forEach((player, day) -> criminalsNbt.putLong(player.toString(), day));
 		nbt.put("Criminals", criminalsNbt);
+
+		NbtList noblesNbt = new NbtList();
+		nobles.forEach(noble -> noblesNbt.add(noble.toNbt()));
+		nbt.put("Nobles", noblesNbt);
+		nbt.putInt("King", kingId);
+		nbt.putInt("NextNobleId", nextNobleId);
+		nbt.putLong("Council", councilDay);
 		return nbt;
 	}
 
@@ -273,6 +315,17 @@ public class Faction {
 				// Skip malformed entries rather than failing the whole load.
 			}
 		}
+
+		NbtList noblesNbt = nbt.getList("Nobles", NbtElement.COMPOUND_TYPE);
+		for (int i = 0; i < noblesNbt.size(); i++) {
+			Noble noble = Noble.fromNbt(noblesNbt.getCompound(i));
+			if (noble != null) {
+				faction.nobles.add(noble);
+			}
+		}
+		faction.kingId = nbt.contains("King") ? nbt.getInt("King") : -1;
+		faction.nextNobleId = nbt.getInt("NextNobleId");
+		faction.councilDay = nbt.contains("Council") ? nbt.getLong("Council") : NEVER;
 		return faction;
 	}
 }

@@ -26,8 +26,12 @@ public final class Ownership {
 		Registry.register(Registries.DATA_COMPONENT_TYPE, Identifier.of(WorldBetween.MOD_ID, "owner"), OWNER);
 	}
 
+	/**
+	 * Marks a stack as a faction's property. Iron nuggets are coin and stay plain: their worth does not
+	 * depend on whose they were.
+	 */
 	public static ItemStack mark(ItemStack stack, FactionType owner) {
-		if (!stack.isEmpty()) {
+		if (!stack.isEmpty() && !stack.isOf(net.minecraft.item.Items.IRON_NUGGET)) {
 			stack.set(OWNER, owner);
 		}
 		return stack;

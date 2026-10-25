@@ -26,7 +26,9 @@ public enum ResourceType {
 	CLOTH("cloth"),
 	EQUIPMENT("equipment"),
 	/** Gathered in libraries; needed to enter later eras. Never spoils or hits storage limits. */
-	KNOWLEDGE("knowledge");
+	KNOWLEDGE("knowledge"),
+	/** The kingdom's treasury, in iron nuggets. Never spoils. */
+	COINS("coins");
 
 	private final String id;
 

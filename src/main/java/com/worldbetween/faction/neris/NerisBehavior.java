@@ -8,6 +8,9 @@ import com.worldbetween.faction.Mine;
 import com.worldbetween.faction.Plot;
 import com.worldbetween.faction.ResourceType;
 import com.worldbetween.faction.Settlement;
+import com.worldbetween.faction.court.Ambition;
+import com.worldbetween.faction.court.Court;
+import com.worldbetween.faction.court.Sphere;
 import com.worldbetween.mine.MineManager;
 import com.worldbetween.mine.MinePlan;
 import com.worldbetween.sim.LocationFinder;
@@ -85,6 +88,7 @@ public class NerisBehavior implements FactionBehavior {
 		faction.setArrived(true);
 		context.chronicle(FactionType.NERIS, "chronicle.worldbetween.neris.arrival",
 				camp.name(), site.getX(), site.getZ());
+		Court.crownFounder(context, faction, camp);
 		return true;
 	}
 
@@ -98,10 +102,12 @@ public class NerisBehavior implements FactionBehavior {
 		trade(faction);
 		feed(context, faction);
 		guard(context, faction);
+		Court.economy(context, faction);
 		store(faction);
 		grow(context, faction);
 		updateEra(context, faction);
 		expand(context, faction);
+		Court.simulateDay(context, faction);
 	}
 
 	private void work(SimulationContext context, Faction faction, Settlement settlement) {
@@ -121,7 +127,8 @@ public class NerisBehavior implements FactionBehavior {
 		settlement.staffed().putAll(staffed);
 		// The town hall organises work better as the settlement grows.
 		float efficiency = 1f + 0.05f * settlement.tier();
-		Production p = new Production(faction, staffed, efficiency);
+		Production p = new Production(faction, staffed, efficiency,
+				type -> 1f + Court.sphereBonus(faction, settlement, Sphere.of(type)));
 
 		// Everyone forages a little and works raw materials by hand, which keeps a fresh camp alive.
 		faction.addResource(FOOD, 2);
@@ -135,7 +142,8 @@ public class NerisBehavior implements FactionBehavior {
 		p.yield(PASTURE, HIDES, 1);
 		p.yield(PIER, FOOD, 5);
 		// A mill only grinds what the bakeries can bake; flour is no use to anyone on its own.
-		p.convert(GRAIN, 12, FLOUR, 12, Math.min(staffed.get(MILL), staffed.get(BAKERY)));
+		int grinding = Math.min(staffed.get(MILL), staffed.get(BAKERY));
+		p.convert(GRAIN, 12, FLOUR, 12, grinding);
 		p.convert(BAKERY, FLOUR, 12, FOOD, 20);
 		p.convert(KITCHEN, MEAT, 4, FOOD, 8);
 		p.convert(KITCHEN, GRAIN, 4, FOOD, 6);
@@ -151,13 +159,14 @@ public class NerisBehavior implements FactionBehavior {
 		p.convert(TANNERY, HIDES, 2, LEATHER, 2);
 		p.convert(WEAVER, WOOL, 3, CLOTH, 2);
 		p.forge();
-		p.yield(LIBRARY, KNOWLEDGE, 2);
+		faction.addResource(KNOWLEDGE, Math.round(staffed.get(LIBRARY) * 2 * efficiency
+				* (1f + Court.sphereBonus(faction, settlement, Sphere.LEARNING)) * Court.knowledgeMultiplier(faction)));
 
 		dig(context, faction, settlement, staffed.get(MINE));
 
 		for (int i = 0; i < staffed.get(BARRACKS); i++) {
-			// The army takes no more than one in seven: someone has to work the fields.
-			boolean enough = faction.soldiers() * 7 >= faction.totalPopulation();
+			// The army takes no more than one in seven (one in five under a warlike king): someone has to work the fields.
+			boolean enough = faction.soldiers() * Court.recruitDivisor(faction) >= faction.totalPopulation();
 			if (enough || settlement.population() <= 20 || faction.resource(EQUIPMENT) < 1 || faction.resource(CLOTH) < 1) {
 				break;
 			}
@@ -175,28 +184,40 @@ public class NerisBehavior implements FactionBehavior {
 		private final Faction faction;
 		private final EnumMap<BuildingType, Integer> staffed;
 		private final float efficiency;
+		private final java.util.function.Function<BuildingType, Float> oversight;
 
-		Production(Faction faction, EnumMap<BuildingType, Integer> staffed, float efficiency) {
+		Production(Faction faction, EnumMap<BuildingType, Integer> staffed, float efficiency,
+				java.util.function.Function<BuildingType, Float> oversight) {
 			this.faction = faction;
 			this.staffed = staffed;
 			this.efficiency = efficiency;
+			this.oversight = oversight;
+		}
+
+		/** Town efficiency times the bonus of the baron (or king) overseeing this kind of building. */
+		private float efficiency(BuildingType building) {
+			return building == null ? efficiency : efficiency * oversight.apply(building);
 		}
 
 		void yield(BuildingType building, ResourceType resource, int perBuilding) {
-			faction.addResource(resource, Math.round(staffed.get(building) * perBuilding * efficiency));
+			faction.addResource(resource, Math.round(staffed.get(building) * perBuilding * efficiency(building)));
 		}
 
 		/** Each building turns up to {@code in} of one resource into {@code out} of another. */
 		void convert(BuildingType building, ResourceType from, int in, ResourceType to, int out) {
-			convert(from, in, to, out, staffed.get(building));
+			convert(from, in, to, out, staffed.get(building), building);
 		}
 
 		void convert(ResourceType from, int in, ResourceType to, int out, int buildings) {
+			convert(from, in, to, out, buildings, null);
+		}
+
+		private void convert(ResourceType from, int in, ResourceType to, int out, int buildings, BuildingType building) {
 			if (buildings <= 0) {
 				return;
 			}
 			long taken = faction.takeResource(from, (long) in * buildings);
-			faction.addResource(to, Math.round(taken * out / (float) in * efficiency));
+			faction.addResource(to, Math.round(taken * out / (float) in * efficiency(building)));
 		}
 
 		/** Smelters need ore and fuel: four ore and two fuel make two metal. */
@@ -205,7 +226,7 @@ public class NerisBehavior implements FactionBehavior {
 			long batches = Math.min(smelters * 2L, Math.min(faction.resource(ORE) / 2, faction.resource(FUEL)));
 			faction.takeResource(ORE, batches * 2);
 			faction.takeResource(FUEL, batches);
-			long metal = Math.round(batches * efficiency);
+			long metal = Math.round(batches * efficiency(SMELTER));
 			faction.addResource(METAL, metal);
 			return metal;
 		}
@@ -260,7 +281,7 @@ public class NerisBehavior implements FactionBehavior {
 	/** Without watchtowers, thieves and wolves take a share of the stores. */
 	private void guard(SimulationContext context, Faction faction) {
 		for (Settlement settlement : faction.settlements()) {
-			float chance = Math.max(0f, 0.15f - 0.05f * settlement.buildingCount(WATCHTOWER));
+			float chance = Math.max(0f, 0.15f - 0.05f * settlement.buildingCount(WATCHTOWER)) * Court.raidMultiplier(faction, settlement);
 			if (context.random().nextFloat() >= chance) {
 				continue;
 			}
@@ -276,9 +297,10 @@ public class NerisBehavior implements FactionBehavior {
 
 	/** Whatever does not fit into the warehouses spoils. */
 	private void store(Faction faction) {
-		long capacity = BASE_STORAGE + (long) STORAGE_PER_WAREHOUSE * faction.totalBuildings(WAREHOUSE);
+		long capacity = Math.round((BASE_STORAGE + (long) STORAGE_PER_WAREHOUSE * faction.totalBuildings(WAREHOUSE))
+				* Court.storageMultiplier(faction));
 		for (ResourceType resource : ResourceType.values()) {
-			if (resource != KNOWLEDGE && faction.resource(resource) > capacity) {
+			if (resource != KNOWLEDGE && resource != COINS && faction.resource(resource) > capacity) {
 				faction.takeResource(resource, faction.resource(resource) - capacity);
 			}
 		}
@@ -331,7 +353,7 @@ public class NerisBehavior implements FactionBehavior {
 			settlement.startProject(next);
 		}
 		BuildingType project = settlement.project();
-		if (!settlement.advanceProject(1 + idleWorkers / 4)) {
+		if (!settlement.advanceProject(1 + idleWorkers / 4 + Court.buildBonus(faction, settlement))) {
 			return;
 		}
 		ServerWorld world = context.server().getOverworld();
@@ -407,6 +429,8 @@ public class NerisBehavior implements FactionBehavior {
 		if (tier >= 2 && count(settlement, LIBRARY) == 0) return LIBRARY;
 		if (tier >= 2 && count(settlement, WEAVER) == 0) return WEAVER;
 		if (tier >= 2 && count(settlement, FORGE) > 0 && count(settlement, BARRACKS) < 1 + tier / 2) return BARRACKS;
+		BuildingType wish = ambitionWish(settlement, Court.ambitionOf(faction, settlement));
+		if (wish != null) return wish;
 		if (count(settlement, LUMBER_CAMP) < 1 + pop / 40) return LUMBER_CAMP;
 		if (count(settlement, SAWMILL) < (count(settlement, LUMBER_CAMP) + 1) / 2) return SAWMILL;
 		if (count(settlement, QUARRY) < 1 + pop / 50) return QUARRY;
@@ -416,6 +440,22 @@ public class NerisBehavior implements FactionBehavior {
 		if (smelters > 0 && count(settlement, FORGE) * 3 < smelters * 2) return FORGE;
 		if (tier >= 1 && kitchens < 1 + pop / 40) return KITCHEN;
 		return null;
+	}
+
+	/** What the lord of the town pushes for once the basics are in place. */
+	private BuildingType ambitionWish(Settlement settlement, Ambition ambition) {
+		if (ambition == null) {
+			return null;
+		}
+		int tier = settlement.tier();
+		return switch (ambition) {
+			case WEALTH -> count(settlement, WAREHOUSE) < 2 + tier / 2 ? WAREHOUSE : null;
+			case ARMY, WAR -> count(settlement, FORGE) > 0 && count(settlement, BARRACKS) < 2 + tier / 2 ? BARRACKS : null;
+			case SCIENCE -> tier >= 1 && count(settlement, LIBRARY) < 1 + tier / 2 ? LIBRARY : null;
+			case ORDER -> count(settlement, WATCHTOWER) < 2 + tier ? WATCHTOWER : null;
+			case VENGEANCE -> count(settlement, SMELTER) > 0 && count(settlement, FORGE) < count(settlement, SMELTER) ? FORGE : null;
+			case GLORY, EXPANSION -> null;
+		};
 	}
 
 	private static int count(Settlement settlement, BuildingType type) {
@@ -428,7 +468,7 @@ public class NerisBehavior implements FactionBehavior {
 			if (pop >= housing(settlement) || faction.resource(FOOD) + faction.resource(MEAT) + faction.resource(GRAIN) < 2L * faction.totalPopulation()) {
 				continue;
 			}
-			int births = Math.max(1, pop / 25);
+			int births = Math.max(1, Math.round(pop / 25f * Court.birthMultiplier(faction, settlement)));
 			if (context.random().nextFloat() < 0.6f) {
 				births = Math.min(births, housing(settlement) - pop);
 				settlement.setPopulation(pop + births);
@@ -454,7 +494,7 @@ public class NerisBehavior implements FactionBehavior {
 
 	private void expand(SimulationContext context, Faction faction) {
 		if (faction.settlements().size() >= MAX_SETTLEMENTS
-				|| context.day() - faction.lastExpansionDay() < EXPANSION_COOLDOWN
+				|| context.day() - faction.lastExpansionDay() < Court.expansionCooldown(faction, EXPANSION_COOLDOWN)
 				|| faction.resource(WOOD) < 60
 				|| faction.resource(STONE) < 60
 				|| faction.resource(FOOD) + faction.resource(GRAIN) + faction.resource(MEAT) < 60) {

@@ -71,6 +71,11 @@ public final class WorldBetweenCommand {
 										.then(CommandManager.argument("radius", IntegerArgumentType.integer(4, 64))
 												.executes(context -> mineMap(context, IntegerArgumentType.getInteger(context, "radius")))))))
 				.then(CommandManager.literal("town").executes(WorldBetweenCommand::town))
+				.then(CommandManager.literal("court")
+						.executes(WorldBetweenCommand::court)
+						.then(CommandManager.literal("kill")
+								.requires(source -> source.hasPermissionLevel(2))
+								.executes(WorldBetweenCommand::killKing)))
 				.then(CommandManager.literal("arrive")
 						.requires(source -> source.hasPermissionLevel(2))
 						.then(CommandManager.argument("faction", StringArgumentType.word())
@@ -253,6 +258,44 @@ public final class WorldBetweenCommand {
 		if (floor.isOf(Blocks.WATER)) return 'w';
 		if (floor.isAir() || floor.isOf(Blocks.CAVE_AIR)) return head.isAir() ? '.' : ',';
 		return ' ';
+	}
+
+	private static int court(CommandContext<ServerCommandSource> context) {
+		WorldBetweenState state = WorldBetweenState.get(context.getSource().getServer());
+		Faction faction = state.faction(FactionType.NERIS);
+		long day = state.day();
+		send(context, Text.translatable("command.worldbetween.court.header", faction.type().displayName(),
+				faction.resource(ResourceType.COINS)).formatted(Formatting.GOLD));
+		com.worldbetween.faction.court.Noble king = faction.king();
+		if (king == null) {
+			send(context, Text.translatable("command.worldbetween.court.no_king", faction.councilDay()).formatted(Formatting.RED));
+		}
+		for (Settlement settlement : faction.settlements()) {
+			for (com.worldbetween.faction.court.Noble noble : faction.livingNobles()) {
+				if (noble.seat() != settlement.id()) {
+					continue;
+				}
+				MutableText line = Text.literal(noble == king ? " ♛ " : " ▪ ").formatted(noble == king ? Formatting.GOLD : Formatting.GRAY)
+						.append(noble.displayName().formatted(noble == king ? Formatting.YELLOW : Formatting.WHITE))
+						.append(Text.translatable("command.worldbetween.court.noble", noble.age(day), settlement.name(),
+								noble.traits().get(0).displayName(), noble.traits().get(1).displayName(),
+								noble.ambition().displayName(), noble.sphere().displayName()).formatted(Formatting.GRAY));
+				if (king != null && noble != king) {
+					line.append(Text.translatable("command.worldbetween.court.opinion",
+							com.worldbetween.faction.court.Court.opinion(noble, king)).formatted(Formatting.DARK_GRAY));
+				}
+				send(context, line);
+			}
+		}
+		return 1;
+	}
+
+	private static int killKing(CommandContext<ServerCommandSource> context) {
+		WorldBetweenState state = WorldBetweenState.get(context.getSource().getServer());
+		boolean killed = com.worldbetween.faction.court.Court.killKing(
+				new SimulationContext(context.getSource().getServer(), state), state.faction(FactionType.NERIS));
+		state.markDirty();
+		return killed ? 1 : 0;
 	}
 
 	private static int town(CommandContext<ServerCommandSource> context) {

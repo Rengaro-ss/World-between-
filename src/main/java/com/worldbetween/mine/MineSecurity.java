@@ -120,7 +120,7 @@ public final class MineSecurity {
 		if (faction.isCriminal(player.getUuid())) {
 			return; // already wanted; guards will deal with criminals once they exist as creatures
 		}
-		int seconds = config().trespassGraceSeconds;
+		int seconds = com.worldbetween.faction.court.Court.graceSeconds(faction, site.settlement(), config().trespassGraceSeconds);
 		ServerBossBar bar = new ServerBossBar(Text.translatable("bossbar.worldbetween.guards", site.owner().displayName()),
 				BossBar.Color.RED, BossBar.Style.NOTCHED_10);
 		bar.addPlayer(player);
