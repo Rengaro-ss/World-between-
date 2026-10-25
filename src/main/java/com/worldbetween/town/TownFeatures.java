@@ -109,6 +109,15 @@ public final class TownFeatures {
 		}
 	}
 
+	/** A structure feature for other peoples' builders (the Kaments' holds) to hand to the town builder. */
+	public static Feature structure(String key, int version, IntFunction<Canvas> structure, int[] history) {
+		return new Feature(key, version, null, structure, null, null, history);
+	}
+
+	public static int[] versionsUpTo(int max) {
+		return upTo(max);
+	}
+
 	public interface LinearEmitter {
 		void emit(Canvas canvas, Area area, LongSet columns, int version);
 	}

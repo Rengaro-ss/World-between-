@@ -28,7 +28,9 @@ public final class Canvas {
 		/** Place only into air, plants or water: foundations under a building on a slope. */
 		FILL,
 		/** Remove natural ground, plants and trees: making room for a building. */
-		CLEAR
+		CLEAR,
+		/** Hew out natural rock, leaving a hollow; lava and water next to it are walled off. */
+		CARVE
 	}
 
 	public record Placement(BlockState state, Mode mode) {
@@ -65,7 +67,7 @@ public final class Canvas {
 	public void put(BlockPos pos, BlockState state, Mode mode) {
 		Placement existing = blocks.get(pos);
 		// A clear never undoes a placement, and a fill never overrides a solid placement.
-		if (existing != null && (mode == Mode.CLEAR || mode == Mode.FILL && existing.mode() == Mode.SET)) {
+		if (existing != null && (mode == Mode.CLEAR || mode == Mode.CARVE || mode == Mode.FILL && existing.mode() == Mode.SET)) {
 			return;
 		}
 		blocks.put(pos.toImmutable(), new Placement(state, mode));
@@ -174,6 +176,21 @@ public final class Canvas {
 					set(x, 0, z, floor);
 					for (int y = -1; y >= -8; y--) {
 						fill(x, y, z, foundation);
+					}
+				}
+			}
+		}
+
+		/** Hews out one block of rock. */
+		public void carve(int x, int y, int z) {
+			canvas.put(world(x, y, z), net.minecraft.block.Blocks.AIR.getDefaultState(), Mode.CARVE);
+		}
+
+		public void carveBox(int x0, int y0, int z0, int x1, int y1, int z1) {
+			for (int x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) {
+				for (int y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) {
+					for (int z = Math.min(z0, z1); z <= Math.max(z0, z1); z++) {
+						carve(x, y, z);
 					}
 				}
 			}

@@ -51,7 +51,11 @@ public final class TownManager {
 			if (!faction.isActive()) {
 				continue;
 			}
-			for (TownFeatures.Feature marker : TownFeatures.markers(world, faction)) {
+			List<TownFeatures.Feature> extras = new java.util.ArrayList<>(TownFeatures.markers(world, faction));
+			if (faction.type() == com.worldbetween.faction.FactionType.KAMENT) {
+				extras.addAll(com.worldbetween.hold.HoldFeatures.tunnels(faction));
+			}
+			for (TownFeatures.Feature marker : extras) {
 				if (budget[0] <= 0 || System.nanoTime() > deadline) {
 					return;
 				}
@@ -61,7 +65,9 @@ public final class TownManager {
 				if (settlement.dimension() != World.OVERWORLD) {
 					continue;
 				}
-				List<TownFeatures.Feature> features = TownFeatures.of(world, faction, settlement);
+				List<TownFeatures.Feature> features = faction.type() == com.worldbetween.faction.FactionType.KAMENT
+						? com.worldbetween.hold.HoldFeatures.of(world, faction, settlement)
+						: TownFeatures.of(world, faction, settlement);
 				for (TownFeatures.Feature feature : features) {
 					if (budget[0] <= 0 || System.nanoTime() > deadline) {
 						return;
@@ -137,10 +143,14 @@ public final class TownManager {
 				case FILL -> current.isAir() || current.isReplaceable() || !current.getFluidState().isEmpty();
 				case CLEAR -> !current.isAir() && current.getFluidState().isEmpty()
 						&& (MineBlocks.isDiggable(current) || current.isIn(BlockTags.LOGS));
+				case CARVE -> !current.isAir() && (MineBlocks.isDiggable(current) || current.isIn(BlockTags.LOGS));
 			};
 			if (place && !current.equals(placement.state())) {
 				world.setBlockState(pos, placement.state(), FLAGS);
 				changed++;
+				if (placement.mode() == Canvas.Mode.CARVE) {
+					changed += seal(world, canvas, pos);
+				}
 				if (current.isIn(BlockTags.LOGS)) {
 					changed += fellTree(world, pos);
 				}
@@ -149,6 +159,27 @@ public final class TownManager {
 		for (Canvas.Hook hook : canvas.hooks()) {
 			if (area.contains(hook.pos()) && (firstBuild || !hook.firstBuildOnly())) {
 				hook.action().accept(world, hook.pos());
+			}
+		}
+		return changed;
+	}
+
+	/**
+	 * Walls off what would pour or fall into a freshly hewn hollow: lava and water beside it, and sand or
+	 * gravel above it. The Kaments know their rock.
+	 */
+	private static int seal(ServerWorld world, Canvas canvas, BlockPos pos) {
+		int changed = 0;
+		for (net.minecraft.util.math.Direction direction : net.minecraft.util.math.Direction.values()) {
+			BlockPos next = pos.offset(direction);
+			if (canvas.blocks().containsKey(next) || !world.isChunkLoaded(next)) {
+				continue;
+			}
+			BlockState state = world.getBlockState(next);
+			boolean loose = direction == net.minecraft.util.math.Direction.UP && state.getBlock() instanceof net.minecraft.block.FallingBlock;
+			if (!state.getFluidState().isEmpty() || loose) {
+				world.setBlockState(next, MineBlocks.wornRock(next.getY()), FLAGS);
+				changed++;
 			}
 		}
 		return changed;

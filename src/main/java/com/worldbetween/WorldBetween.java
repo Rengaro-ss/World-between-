@@ -34,6 +34,7 @@ public class WorldBetween implements ModInitializer {
 		config = WorldBetweenConfig.load();
 		Ownership.register();
 		com.worldbetween.entity.WorldBetweenEntities.register();
+		com.worldbetween.entity.kament.KamentEffects.register();
 		WorldBetweenAttachments.register();
 		ServerTickEvents.END_SERVER_TICK.register(WorldSimulation::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(MineManager::onServerTick);
@@ -43,17 +44,22 @@ public class WorldBetween implements ModInitializer {
 		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.NerisPresence::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.town.TownSecurity::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.Arrival::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.kament.KamentPresence::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.kament.KamentSecurity::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.kament.KamentAwakening::onServerTick);
 		net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AFTER_DEATH.register(com.worldbetween.town.TownSecurity::onKill);
 		net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.register((entity, world) ->
 				com.worldbetween.entity.NerisPresence.onEntityLoad(entity));
 		PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
 			if (world instanceof ServerWorld serverWorld && player instanceof ServerPlayerEntity serverPlayer) {
 				MineSecurity.onBlockBroken(serverPlayer, serverWorld, pos, state);
+				com.worldbetween.entity.kament.KamentSecurity.onBlockBroken(serverPlayer, serverWorld, pos, state);
 			}
 		});
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			MineSecurity.onDisconnect(handler.getPlayer());
 			com.worldbetween.town.TownSecurity.onDisconnect(handler.getPlayer());
+			com.worldbetween.entity.kament.KamentSecurity.onDisconnect(handler.getPlayer());
 		});
 		CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) ->
 				WorldBetweenCommand.register(dispatcher));

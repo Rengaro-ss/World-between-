@@ -19,6 +19,10 @@ public class WorldBetweenConfig {
 
 	/** Day on which the Kingdom of Neris comes through its portal. */
 	public int nerisArrivalDay = 3;
+	/** Day the Kaments wake if the Neris never come; otherwise the opening of their portal wakes them a day later. */
+	public int kamentArrivalDay = 7;
+	/** How many holds the Kaments wake in at once. */
+	public int kamentAwakeningSites = 3;
 	/** Arrival points are picked in a ring around world spawn, in blocks. */
 	public int minArrivalDistance = 400;
 	public int maxArrivalDistance = 900;

@@ -50,7 +50,7 @@ public final class TownActivity {
 		boolean day = time < 12300 || time > 23500;
 		WorldBetweenState state = WorldBetweenState.get(server);
 		for (Faction faction : state.factions()) {
-			if (!faction.isActive()) {
+			if (!faction.isActive() || faction.type() != com.worldbetween.faction.FactionType.NERIS) {
 				continue;
 			}
 			for (Settlement settlement : faction.settlements()) {

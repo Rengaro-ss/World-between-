@@ -13,6 +13,8 @@ public class WorldBetweenClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		EntityRendererRegistry.register(WorldBetweenEntities.NERIS, NerisRenderer::new);
+		net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(KamentModel.LAYER, KamentModel::getTexturedModelData);
+		EntityRendererRegistry.register(WorldBetweenEntities.KAMENT, KamentRenderer::new);
 		ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
 			FactionType owner = Ownership.ownerOf(stack);
 			if (owner != null) {

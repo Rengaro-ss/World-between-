@@ -14,10 +14,17 @@ public final class WorldBetweenEntities {
 			EntityType.Builder.create(NerisEntity::new, SpawnGroup.MISC).dimensions(0.6f, 1.8f).maxTrackingRange(10)
 					.build(WorldBetween.MOD_ID + ":neris"));
 
+	/** A Kament: a little taller than a man, a little shorter than an enderman. */
+	public static final EntityType<com.worldbetween.entity.kament.KamentEntity> KAMENT = Registry.register(Registries.ENTITY_TYPE,
+			Identifier.of(WorldBetween.MOD_ID, "kament"),
+			EntityType.Builder.create(com.worldbetween.entity.kament.KamentEntity::new, SpawnGroup.MISC).dimensions(0.95f, 2.4f)
+					.maxTrackingRange(10).build(WorldBetween.MOD_ID + ":kament"));
+
 	private WorldBetweenEntities() {
 	}
 
 	public static void register() {
 		FabricDefaultAttributeRegistry.register(NERIS, NerisEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(KAMENT, com.worldbetween.entity.kament.KamentEntity.createAttributes());
 	}
 }

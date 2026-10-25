@@ -79,6 +79,8 @@ public final class Arrival {
 		faction.setPortal(portal);
 		scene = new Scene(faction, camp, portal, server.getTicks());
 		announce(world, portal);
+		// Hell has opened, and deep under the mountains something old hears it.
+		com.worldbetween.entity.kament.KamentAwakening.stir(server);
 	}
 
 	/** Stages the scene again at the existing portal, for a witness who missed it. Returns the portal, or null. */

@@ -90,11 +90,26 @@ public final class WorldBetweenCommand {
 								.then(CommandManager.literal("here").executes(context -> arrive(context, true)))
 								.then(CommandManager.literal("replay").executes(WorldBetweenCommand::replayArrival))))
 				.then(CommandManager.literal("journeys").executes(WorldBetweenCommand::journeys))
+				.then(CommandManager.literal("hold").executes(WorldBetweenCommand::hold))
+				.then(CommandManager.literal("council").executes(WorldBetweenCommand::council))
+				.then(CommandManager.literal("quake")
+						.requires(source -> source.hasPermissionLevel(2))
+						.executes(context -> {
+							com.worldbetween.entity.kament.KamentAwakening.quakeNow(context.getSource().getServer(), 1f);
+							return 1;
+						}))
 				.then(CommandManager.literal("reputation")
-						.executes(WorldBetweenCommand::reputation)
+						.executes(context -> reputation(context, FactionType.NERIS))
 						.then(CommandManager.argument("value", IntegerArgumentType.integer(Faction.MIN_REPUTATION, Faction.MAX_REPUTATION))
 								.requires(source -> source.hasPermissionLevel(2))
-								.executes(WorldBetweenCommand::setReputation))));
+								.executes(context -> setReputation(context, FactionType.NERIS)))
+						.then(CommandManager.argument("faction", StringArgumentType.word())
+								.suggests((context, builder) -> CommandSource.suggestMatching(
+										Arrays.stream(FactionType.values()).map(FactionType::id), builder))
+								.executes(context -> reputation(context, factionArgument(context)))
+								.then(CommandManager.argument("value", IntegerArgumentType.integer(Faction.MIN_REPUTATION, Faction.MAX_REPUTATION))
+										.requires(source -> source.hasPermissionLevel(2))
+										.executes(context -> setReputation(context, factionArgument(context)))))));
 	}
 
 	private static int status(CommandContext<ServerCommandSource> context) {
@@ -140,6 +155,12 @@ public final class WorldBetweenCommand {
 							settlement.population(), settlement.pos().getX(), settlement.pos().getY(), settlement.pos().getZ())
 							.formatted(Formatting.GRAY)));
 			MutableText buildings = Text.literal("    ");
+			if (type == FactionType.KAMENT) {
+				com.worldbetween.faction.kament.Kaments.halls(settlement).forEach((hall, count) ->
+						buildings.append(hall.displayName()).append(" ×" + count + "  "));
+				buildings.append(Text.literal("· sculptors " + settlement.counter("sculptors") + ", soul " + settlement.counter("soul")
+						+ (com.worldbetween.faction.kament.Kaments.isDeep(settlement) ? ", deep" : "")).formatted(Formatting.DARK_GRAY));
+			}
 			for (Map.Entry<BuildingType, Integer> entry : settlement.buildings().entrySet()) {
 				buildings.append(entry.getKey().displayName()).append(" ×" + entry.getValue() + "  ");
 			}
@@ -176,6 +197,57 @@ public final class WorldBetweenCommand {
 		return days;
 	}
 
+	private static int hold(CommandContext<ServerCommandSource> context) {
+		Vec3d from = context.getSource().getPosition();
+		Faction faction = WorldBetweenState.get(context.getSource().getServer()).faction(FactionType.KAMENT);
+		ServerWorld world = context.getSource().getServer().getOverworld();
+		Settlement nearest = faction.settlements().stream()
+				.min(Comparator.comparingDouble(s -> com.worldbetween.hold.HoldLayout.of(world, s).origin().getSquaredDistance(from)))
+				.orElse(null);
+		if (nearest == null) {
+			context.getSource().sendError(Text.translatable("command.worldbetween.hold.none"));
+			return 0;
+		}
+		com.worldbetween.hold.HoldLayout layout = com.worldbetween.hold.HoldLayout.of(world, nearest);
+		BlockPos origin = layout.origin();
+		BlockPos gate = layout.isDeep() ? origin : layout.local().world(0, 1, -layout.exit());
+		com.worldbetween.faction.kament.Ancient ancient = com.worldbetween.faction.kament.Kaments.ancientOf(faction, nearest);
+		send(context, Text.literal(nearest.name()).formatted(Formatting.GRAY).append(" ")
+				.append(Text.translatable("tier.worldbetween.kament." + (layout.isDeep() ? "deep." : "") + nearest.tier()))
+				.append(Text.translatable("command.worldbetween.hold.summary", nearest.population(), nearest.counter("sculptors"),
+						nearest.counter("soul"), origin.getX(), origin.getY(), origin.getZ(), gate.getX(), gate.getY(), gate.getZ())));
+		if (ancient != null) {
+			send(context, Text.translatable("command.worldbetween.hold.ancient", ancient.name(), ancient.first().displayName(),
+					ancient.second().displayName()));
+		}
+		MutableText halls = Text.translatable("command.worldbetween.hold.halls");
+		com.worldbetween.faction.kament.Kaments.halls(nearest).forEach((hall, count) ->
+				halls.append(Text.literal(" ▪ ").append(hall.displayName()).append(" ×" + count)));
+		send(context, halls);
+		if (nearest.counter("carving") > 0) {
+			send(context, Text.translatable("command.worldbetween.hold.carving", nearest.counter("carving")));
+		}
+		return 1;
+	}
+
+	private static int council(CommandContext<ServerCommandSource> context) {
+		Faction faction = WorldBetweenState.get(context.getSource().getServer()).faction(FactionType.KAMENT);
+		com.worldbetween.faction.kament.Focus focus = com.worldbetween.faction.kament.Kaments.focus(faction);
+		send(context, Text.translatable("command.worldbetween.council.header",
+				focus == null ? Text.literal("—") : focus.displayName()).formatted(Formatting.GRAY));
+		for (com.worldbetween.faction.kament.Ancient ancient : faction.ancients()) {
+			Settlement seat = faction.settlements().stream().filter(s -> s.id() == ancient.seat()).findFirst().orElse(null);
+			send(context, Text.literal(ancient.isAlive() ? " ▪ " : " † ").append(Text.literal(ancient.name()).formatted(Formatting.WHITE))
+					.append(Text.literal(" — " + (seat == null ? "?" : seat.name()) + ", "))
+					.append(ancient.first().displayName()).append(", ").append(ancient.second().displayName()));
+		}
+		for (com.worldbetween.faction.kament.Tunnel tunnel : faction.tunnels()) {
+			send(context, Text.translatable("command.worldbetween.council.tunnel", tunnel.id(), (int) tunnel.dug(), (int) tunnel.length(),
+					tunnel.end().getX(), tunnel.end().getY(), tunnel.end().getZ()));
+		}
+		return faction.ancients().size();
+	}
+
 	private static int replayArrival(CommandContext<ServerCommandSource> context) {
 		Faction faction = WorldBetweenState.get(context.getSource().getServer()).faction(FactionType.NERIS);
 		BlockPos portal = com.worldbetween.entity.Arrival.replay(context.getSource().getServer(), faction);
@@ -209,26 +281,26 @@ public final class WorldBetweenCommand {
 		return faction.journeys().size();
 	}
 
-	private static int reputation(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+	private static int reputation(CommandContext<ServerCommandSource> context, FactionType type) throws CommandSyntaxException {
 		net.minecraft.server.network.ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-		Faction faction = WorldBetweenState.get(context.getSource().getServer()).faction(FactionType.NERIS);
+		Faction faction = WorldBetweenState.get(context.getSource().getServer()).faction(type);
 		int value = faction.reputation(player.getUuid());
-		send(context, Text.translatable("command.worldbetween.reputation", FactionType.NERIS.displayName(), value,
+		send(context, Text.translatable("command.worldbetween.reputation", type.displayName(), value,
 				Text.translatable("reputation.worldbetween." + com.worldbetween.town.TownSecurity.standing(faction, player.getUuid()))));
 		return value;
 	}
 
-	private static int setReputation(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+	private static int setReputation(CommandContext<ServerCommandSource> context, FactionType type) throws CommandSyntaxException {
 		net.minecraft.server.network.ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
 		WorldBetweenState state = WorldBetweenState.get(context.getSource().getServer());
-		Faction faction = state.faction(FactionType.NERIS);
+		Faction faction = state.faction(type);
 		int value = IntegerArgumentType.getInteger(context, "value");
 		faction.changeReputation(player.getUuid(), value - faction.reputation(player.getUuid()));
 		if (value >= 0) {
 			faction.pardon(player.getUuid());
 		}
 		state.markDirty();
-		return reputation(context);
+		return reputation(context, type);
 	}
 
 	private static int arrive(CommandContext<ServerCommandSource> context, boolean here) throws CommandSyntaxException {
@@ -414,6 +486,9 @@ public final class WorldBetweenCommand {
 		Faction owner = null;
 		Settlement nearest = null;
 		for (Faction faction : state.factions()) {
+			if (faction.type() != FactionType.NERIS) {
+				continue;
+			}
 			for (Settlement settlement : faction.settlements()) {
 				if (nearest == null || settlement.pos().getSquaredDistance(from) < nearest.pos().getSquaredDistance(from)) {
 					nearest = settlement;

@@ -37,6 +37,8 @@ public class Settlement {
 	private long coins;
 	/** Where a seeker found the best ground for this town's mine, or null. */
 	private BlockPos mineSite;
+	/** Named numbers a faction keeps about a settlement of its own kind (the Kaments' halls, sculptors, souls). */
+	private final Map<String, Long> counters = new java.util.HashMap<>();
 	/** Buildings that had a full crew on the last simulated day; not saved, rebuilt every day. */
 	private final EnumMap<BuildingType, Integer> staffed = new EnumMap<>(BuildingType.class);
 
@@ -169,6 +171,26 @@ public class Settlement {
 		return staffed;
 	}
 
+	public long counter(String key) {
+		return counters.getOrDefault(key, 0L);
+	}
+
+	public void setCounter(String key, long value) {
+		if (value == 0) {
+			counters.remove(key);
+		} else {
+			counters.put(key, value);
+		}
+	}
+
+	public void addCounter(String key, long delta) {
+		setCounter(key, counter(key) + delta);
+	}
+
+	public Map<String, Long> counters() {
+		return counters;
+	}
+
 	/** Whether the faction treats this settlement as its capital: the first one it founded. */
 	public boolean isCapital() {
 		return id == 0;
@@ -206,6 +228,9 @@ public class Settlement {
 		NbtList plotsNbt = new NbtList();
 		plots.forEach(plot -> plotsNbt.add(plot.toNbt()));
 		nbt.put("Plots", plotsNbt);
+		NbtCompound countersNbt = new NbtCompound();
+		counters.forEach(countersNbt::putLong);
+		nbt.put("Counters", countersNbt);
 		return nbt;
 	}
 
@@ -243,6 +268,10 @@ public class Settlement {
 			if (plot != null) {
 				settlement.plots.add(plot);
 			}
+		}
+		NbtCompound countersNbt = nbt.getCompound("Counters");
+		for (String key : countersNbt.getKeys()) {
+			settlement.counters.put(key, countersNbt.getLong(key));
 		}
 		return settlement;
 	}

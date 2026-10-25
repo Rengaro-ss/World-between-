@@ -61,6 +61,10 @@ public class Faction {
 	private int nextJourneyId;
 	/** The dead portal the founders came through. */
 	private BlockPos portal;
+	/** Named numbers for whatever a faction keeps track of beyond the common fields. */
+	private final Map<String, Long> counters = new HashMap<>();
+	private final List<com.worldbetween.faction.kament.Ancient> ancients = new ArrayList<>();
+	private final List<com.worldbetween.faction.kament.Tunnel> tunnels = new ArrayList<>();
 
 	public Faction(FactionType type) {
 		this.type = type;
@@ -251,6 +255,26 @@ public class Faction {
 		this.portal = portal;
 	}
 
+	public long counter(String key) {
+		return counters.getOrDefault(key, 0L);
+	}
+
+	public void setCounter(String key, long value) {
+		counters.put(key, value);
+	}
+
+	public void addCounter(String key, long delta) {
+		setCounter(key, counter(key) + delta);
+	}
+
+	public List<com.worldbetween.faction.kament.Ancient> ancients() {
+		return ancients;
+	}
+
+	public List<com.worldbetween.faction.kament.Tunnel> tunnels() {
+		return tunnels;
+	}
+
 	public boolean isCriminal(UUID player) {
 		return criminals.containsKey(player);
 	}
@@ -337,6 +361,15 @@ public class Faction {
 		if (portal != null) {
 			nbt.putLong("Portal", portal.asLong());
 		}
+		NbtCompound countersNbt = new NbtCompound();
+		counters.forEach(countersNbt::putLong);
+		nbt.put("Counters", countersNbt);
+		NbtList ancientsNbt = new NbtList();
+		ancients.forEach(ancient -> ancientsNbt.add(ancient.toNbt()));
+		nbt.put("Ancients", ancientsNbt);
+		NbtList tunnelsNbt = new NbtList();
+		tunnels.forEach(tunnel -> tunnelsNbt.add(tunnel.toNbt()));
+		nbt.put("Tunnels", tunnelsNbt);
 		return nbt;
 	}
 
@@ -439,6 +472,21 @@ public class Faction {
 		faction.nextJourneyId = nbt.getInt("NextJourneyId");
 		if (nbt.contains("Portal")) {
 			faction.portal = BlockPos.fromLong(nbt.getLong("Portal"));
+		}
+		NbtCompound countersNbt = nbt.getCompound("Counters");
+		for (String key : countersNbt.getKeys()) {
+			faction.counters.put(key, countersNbt.getLong(key));
+		}
+		NbtList ancientsNbt = nbt.getList("Ancients", NbtElement.COMPOUND_TYPE);
+		for (int i = 0; i < ancientsNbt.size(); i++) {
+			faction.ancients.add(com.worldbetween.faction.kament.Ancient.fromNbt(ancientsNbt.getCompound(i)));
+		}
+		NbtList tunnelsNbt = nbt.getList("Tunnels", NbtElement.COMPOUND_TYPE);
+		for (int i = 0; i < tunnelsNbt.size(); i++) {
+			com.worldbetween.faction.kament.Tunnel tunnel = com.worldbetween.faction.kament.Tunnel.fromNbt(tunnelsNbt.getCompound(i));
+			if (tunnel != null) {
+				faction.tunnels.add(tunnel);
+			}
 		}
 		return faction;
 	}

@@ -33,7 +33,7 @@ public record ChronicleEntry(long day, FactionType faction, String key, List<Str
 		for (int i = 0; i < args.size(); i++) {
 			String arg = args.get(i);
 			int at = arg.indexOf(" @");
-			values[i] = at < 0 ? arg : Text.translatable("noble.worldbetween.name", arg.substring(0, at),
+			values[i] = arg.startsWith("@") ? Text.translatable(arg.substring(1)) : at < 0 ? arg : Text.translatable("noble.worldbetween.name", arg.substring(0, at),
 					Text.translatable(arg.substring(at + 2)));
 		}
 		return Text.translatable(key, values);

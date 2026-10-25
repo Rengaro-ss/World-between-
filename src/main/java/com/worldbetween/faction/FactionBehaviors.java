@@ -13,6 +13,7 @@ public final class FactionBehaviors {
 
 	static {
 		BEHAVIORS.put(FactionType.NERIS, new NerisBehavior());
+		BEHAVIORS.put(FactionType.KAMENT, new com.worldbetween.faction.kament.KamentBehavior());
 	}
 
 	private FactionBehaviors() {

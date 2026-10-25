@@ -28,7 +28,12 @@ public enum ResourceType {
 	/** Gathered in libraries; needed to enter later eras. Never spoils or hits storage limits. */
 	KNOWLEDGE("knowledge"),
 	/** The kingdom's treasury, in iron nuggets. Never spoils. */
-	COINS("coins");
+	COINS("coins"),
+	/** The Kaments' stuff of growth: gravel, sifted for flint. */
+	GRAVEL("gravel"),
+	FLINT("flint"),
+	/** White stone the Kaments carve their finest work from. */
+	DIORITE("diorite");
 
 	private final String id;
 
