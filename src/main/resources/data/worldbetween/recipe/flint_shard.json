@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:flint"
+    }
+  ],
+  "result": {
+    "id": "worldbetween:flint_shard",
+    "count": 9
+  }
+}

@@ -259,7 +259,11 @@ public final class NerisPresence {
 		for (int i = 0; i < towerGuards; i++) {
 			BlockPos tower = towers.get(i);
 			BlockPos post = tower.withY(world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, tower.getX(), tower.getZ() - 2));
-			wanted.put(prefix + "guard:" + i, new Spawner(NerisRole.GUARD, post.north(2), 3, entity -> entity.setAnchor(post.north(2), 3)));
+			// The tower watch carries bows.
+			wanted.put(prefix + "guard:" + i, new Spawner(NerisRole.GUARD, post.north(2), 3, entity -> {
+				entity.setAnchor(post.north(2), 3);
+				entity.setArcher(true);
+			}));
 		}
 		// Guards at the hall door, who decide who goes in.
 		TownLayout.Hall door = layout.hall(settlement.tier(), settlement.isCapital());

@@ -126,6 +126,7 @@ public final class KamentPresence {
 				entity.setAnchor(seat, 0);
 				entity.setCustomName(Text.translatable("entity.worldbetween.ancient_named", ancient.name()));
 				entity.setSpeech("speech.worldbetween.kament.ancient." + ancient.first().id(), ancient.name());
+				entity.setTrader(settlement.id(), true);
 				entity.setOnDeath(source -> KamentSecurity.ancientSlain(world.getServer(), faction, ancient, settlement, KamentEntity.killer(source)));
 			}));
 		}
@@ -167,6 +168,9 @@ public final class KamentPresence {
 				entity.setWorkSpot(spot);
 				entity.setAnchor(spot, 1);
 				entity.setSpeech("speech.worldbetween.kament.work." + hall.id());
+				if (hall == KamentHall.CARVERY) {
+					entity.setTrader(settlement.id(), false);
+				}
 			}));
 		}
 

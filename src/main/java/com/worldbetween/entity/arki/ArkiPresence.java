@@ -76,7 +76,8 @@ public final class ArkiPresence {
 		boolean night = world.isNight();
 		Map<String, Spot> wanted = new HashMap<>();
 		int people = colony.population();
-		int out = 0;
+		// One keeper always stays by the capsule to deal with strangers; the rest go to work first.
+		int out = people > 0 ? 1 : 0;
 		for (TownFeatures.Feature feature : ColonyFeatures.of(world, faction, colony)) {
 			int at = feature.key().lastIndexOf("/disc_");
 			if (at < 0) {
@@ -103,9 +104,10 @@ public final class ArkiPresence {
 			}
 		}
 		// Keepers round the capsule, and the rest drifting over the central disc.
-		int keepers = Math.min(people - out, 1 + colony.tier());
+		int keepers = Math.min(people - out + 1, 1 + colony.tier());
+		out--;
 		for (int i = 0; i < keepers; i++) {
-			wanted.put(prefix + "keeper:" + i, new Spot(ArkiRole.KEEPER, origin, null, ""));
+			wanted.put(prefix + "keeper:" + i, new Spot(ArkiRole.KEEPER, origin, null, i == 0 ? "trade" : ""));
 			out++;
 		}
 		for (int i = 0; i < Math.min(4, people - out); i++) {
@@ -130,7 +132,11 @@ public final class ArkiPresence {
 			arki.setRole(spot.role());
 			arki.setAnchor(spot.anchor(), spot.work() == null ? ColonyLayout.centralRadius(colony.tier()) - 1 : 2);
 			arki.setWorkSpot(spot.work());
-			arki.setSpeech(spot.speech());
+			if (spot.speech().equals("trade")) {
+				arki.setMarket(colony.id()); // the first keeper deals with strangers for the colony
+			} else {
+				arki.setSpeech(spot.speech());
+			}
 			arki.setCustomName(Text.literal(ArkiNames.person(Random.create(entry.getKey().hashCode() * 0x9E3779B97F4A7C15L + random.nextInt(3)))));
 			String key = entry.getKey();
 			arki.setOnDeath(source -> {
@@ -150,6 +156,7 @@ public final class ArkiPresence {
 		colony.setPopulation(colony.population() - 1);
 		if (killer != null) {
 			faction.changeReputation(killer.getUuid(), -15);
+			faction.declareCriminal(killer.getUuid(), state.day());
 			if (faction.tryEvent("slain_" + colony.id(), state.day(), 5)) {
 				new SimulationContext(server, state).chronicle(FactionType.ARKI, "chronicle.worldbetween.arki.slain", colony.name(),
 						killer.getName().getString());

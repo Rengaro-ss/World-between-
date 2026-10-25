@@ -1,0 +1,41 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "worldbetween:chisel"
+    },
+    [
+      {
+        "item": "minecraft:polished_deepslate"
+      },
+      {
+        "item": "minecraft:deepslate"
+      },
+      {
+        "item": "minecraft:cobbled_deepslate"
+      }
+    ],
+    [
+      {
+        "item": "minecraft:polished_deepslate"
+      },
+      {
+        "item": "minecraft:deepslate"
+      },
+      {
+        "item": "minecraft:cobbled_deepslate"
+      }
+    ],
+    {
+      "item": "worldbetween:hewn_granite"
+    },
+    {
+      "item": "worldbetween:heartstone"
+    }
+  ],
+  "result": {
+    "id": "worldbetween:deep_monolith",
+    "count": 3
+  }
+}

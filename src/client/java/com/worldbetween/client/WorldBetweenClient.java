@@ -17,6 +17,7 @@ public class WorldBetweenClient implements ClientModInitializer {
 		EntityRendererRegistry.register(WorldBetweenEntities.KAMENT, KamentRenderer::new);
 		net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(ArkiModel.LAYER, ArkiModel::getTexturedModelData);
 		EntityRendererRegistry.register(WorldBetweenEntities.ARKI, ArkiRenderer::new);
+		EntityRendererRegistry.register(WorldBetweenEntities.ARKI_ORB, net.minecraft.client.render.entity.EmptyEntityRenderer::new);
 		ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
 			FactionType owner = Ownership.ownerOf(stack);
 			if (owner != null) {
@@ -25,6 +26,9 @@ public class WorldBetweenClient implements ClientModInitializer {
 			FactionType seller = Ownership.sellerOf(stack);
 			if (seller != null) {
 				lines.add(Text.translatable("tooltip.worldbetween.bought", seller.displayName()).formatted(Formatting.DARK_GREEN));
+			}
+			if (com.worldbetween.item.WorldBetweenItems.STONE_GEAR.contains(stack.getItem())) {
+				lines.add(Text.translatable("item.worldbetween.stone_gear.tooltip").formatted(Formatting.DARK_PURPLE));
 			}
 		});
 	}

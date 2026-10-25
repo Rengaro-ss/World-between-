@@ -33,6 +33,7 @@ public class WorldBetween implements ModInitializer {
 	public void onInitialize() {
 		config = WorldBetweenConfig.load();
 		Ownership.register();
+		com.worldbetween.item.WorldBetweenItems.register();
 		com.worldbetween.entity.WorldBetweenEntities.register();
 		com.worldbetween.entity.kament.KamentEffects.register();
 		WorldBetweenAttachments.register();
@@ -49,20 +50,27 @@ public class WorldBetween implements ModInitializer {
 		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.kament.KamentAwakening::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.arki.ArkiPresence::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.arki.ArkiSky::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.item.StonePath::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.war.WarPresence::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.arki.ArkiSecurity::onServerTick);
 		net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AFTER_DEATH.register(com.worldbetween.town.TownSecurity::onKill);
+		net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AFTER_DEATH.register(com.worldbetween.war.WarPresence::onDeath);
 		net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.register((entity, world) ->
 				com.worldbetween.entity.NerisPresence.onEntityLoad(entity));
 		PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
 			if (world instanceof ServerWorld serverWorld && player instanceof ServerPlayerEntity serverPlayer) {
 				MineSecurity.onBlockBroken(serverPlayer, serverWorld, pos, state);
 				com.worldbetween.entity.kament.KamentSecurity.onBlockBroken(serverPlayer, serverWorld, pos, state);
+				com.worldbetween.entity.arki.ArkiSecurity.onBlockBroken(serverPlayer, serverWorld, pos, state);
 			}
 		});
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			MineSecurity.onDisconnect(handler.getPlayer());
 			com.worldbetween.town.TownSecurity.onDisconnect(handler.getPlayer());
 			com.worldbetween.entity.kament.KamentSecurity.onDisconnect(handler.getPlayer());
+			com.worldbetween.entity.arki.ArkiSecurity.onDisconnect(handler.getPlayer());
 		});
+		net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register(com.worldbetween.entity.arki.ArkiSecurity::onUseBlock);
 		CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) ->
 				WorldBetweenCommand.register(dispatcher));
 		LOGGER.info("World Between initialized");

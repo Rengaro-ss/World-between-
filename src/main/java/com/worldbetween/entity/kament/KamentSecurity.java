@@ -272,7 +272,8 @@ public final class KamentSecurity {
 	public static boolean surrender(KamentEntity kament, ServerPlayerEntity player) {
 		WorldBetweenState state = WorldBetweenState.get(player.getServer());
 		Faction faction = state.faction(FactionType.KAMENT);
-		if (faction.isCriminal(player.getUuid())) {
+		// Metal goes to them when they have asked for it, or when a stranger, crouching, offers it of their own will.
+		if (faction.isCriminal(player.getUuid()) || !DEMANDS.containsKey(player.getUuid()) && !player.isSneaking()) {
 			return false;
 		}
 		PlayerInventory inventory = player.getInventory();

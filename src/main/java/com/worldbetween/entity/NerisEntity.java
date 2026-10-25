@@ -55,7 +55,7 @@ import java.util.function.Consumer;
  * seeker's journey goes on in the simulation either way, and these are its visible side. So they are
  * never saved; whoever manages them brings them back when a player returns.
  */
-public class NerisEntity extends PathAwareEntity implements Merchant {
+public class NerisEntity extends PathAwareEntity implements Merchant, FactionMember, net.minecraft.entity.ai.RangedAttackMob {
 	private static final TrackedData<Integer> ROLE = DataTracker.registerData(NerisEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
 	/** Where the person is headed: a seeker's goal, a guard's quarry. */
@@ -77,6 +77,9 @@ public class NerisEntity extends PathAwareEntity implements Merchant {
 	private PlayerEntity customer;
 	private TradeOfferList offers = new TradeOfferList();
 	private Map<TradeOffer, NerisTrade.Deal> deals = Map.of();
+
+	/** Bowmen keep their distance and shoot; everyone else closes in with the blade. */
+	private boolean archer;
 
 	public NerisEntity(EntityType<? extends PathAwareEntity> type, World world) {
 		super(type, world);
@@ -123,6 +126,46 @@ public class NerisEntity extends PathAwareEntity implements Merchant {
 			case KING, BARON -> attribute(40, 4, 0.25);
 			default -> attribute(24, 3, 0.3);
 		}
+	}
+
+	/** Arms a guard with a bow (and a short blade for when it comes to that). */
+	public void setArcher(boolean archer) {
+		this.archer = archer;
+		if (archer) {
+			equip(EquipmentSlot.MAINHAND, Items.BOW);
+			equip(EquipmentSlot.HEAD, Items.CHAINMAIL_HELMET);
+			equip(EquipmentSlot.CHEST, Items.LEATHER_CHESTPLATE);
+		}
+	}
+
+	public boolean isArcher() {
+		return archer;
+	}
+
+	@Override
+	public void shootAt(LivingEntity target, float pullProgress) {
+		ItemStack bow = getMainHandStack();
+		net.minecraft.entity.projectile.ArrowEntity arrow = new net.minecraft.entity.projectile.ArrowEntity(getWorld(), this,
+				new ItemStack(Items.ARROW), bow.isOf(Items.BOW) ? bow : new ItemStack(Items.BOW));
+		arrow.pickupType = net.minecraft.entity.projectile.PersistentProjectileEntity.PickupPermission.DISALLOWED;
+		int era = getWorld() instanceof ServerWorld world ? WorldBetweenState.get(world.getServer()).faction(FactionType.NERIS).era() : 0;
+		arrow.setDamage(2.0 + 0.5 * era);
+		double dx = target.getX() - getX();
+		double dy = target.getBodyY(0.3333) - arrow.getY();
+		double dz = target.getZ() - getZ();
+		double flat = Math.sqrt(dx * dx + dz * dz);
+		arrow.setVelocity(dx, dy + flat * 0.2, dz, 1.6f, 6f);
+		playSound(SoundEvents.ENTITY_SKELETON_SHOOT, 1f, 1f / (getRandom().nextFloat() * 0.4f + 0.8f));
+		getWorld().spawnEntity(arrow);
+	}
+
+	/** The kingdom's arrows do not find the kingdom's own. */
+	@Override
+	public boolean damage(DamageSource source, float amount) {
+		if (source.getSource() instanceof net.minecraft.entity.projectile.ProjectileEntity && source.getAttacker() instanceof NerisEntity) {
+			return false;
+		}
+		return super.damage(source, amount);
 	}
 
 	/** Walking speed: a caravan keeps to its donkey's pace. */
@@ -269,7 +312,18 @@ public class NerisEntity extends PathAwareEntity implements Merchant {
 	@Override
 	protected void initGoals() {
 		goalSelector.add(0, new SwimGoal(this));
-		goalSelector.add(1, new MeleeAttackGoal(this, 1.15, false));
+		goalSelector.add(1, new BowGoal());
+		goalSelector.add(1, new MeleeAttackGoal(this, 1.15, false) {
+			@Override
+			public boolean canStart() {
+				return !archer && super.canStart();
+			}
+
+			@Override
+			public boolean shouldContinue() {
+				return !archer && super.shouldContinue();
+			}
+		});
 		goalSelector.add(2, new FollowQuarryGoal());
 		goalSelector.add(3, new TravelGoal());
 		goalSelector.add(4, new WorkGoal());
@@ -278,7 +332,19 @@ public class NerisEntity extends PathAwareEntity implements Merchant {
 		goalSelector.add(7, new LookAroundGoal(this));
 		targetSelector.add(1, new RevengeGoal(this));
 		targetSelector.add(2, new ActiveTargetGoal<>(this, PlayerEntity.class, 10, true, false, this::isEnemyPlayer));
-		targetSelector.add(3, new ActiveTargetGoal<>(this, HostileEntity.class, 10, true, false, target -> role().fights()));
+		targetSelector.add(3, new ActiveTargetGoal<>(this, LivingEntity.class, 10, true, false,
+				target -> com.worldbetween.war.WarRules.isEnemy(this, target)));
+		targetSelector.add(4, new ActiveTargetGoal<>(this, HostileEntity.class, 10, true, false, target -> role().fights()));
+	}
+
+	@Override
+	public FactionType faction() {
+		return FactionType.NERIS;
+	}
+
+	@Override
+	public boolean fights() {
+		return role().fights();
 	}
 
 	/** Guards and seekers attack the kingdom's criminals on sight. */
@@ -329,7 +395,7 @@ public class NerisEntity extends PathAwareEntity implements Merchant {
 		if (!getWorld().isClient() && role() == NerisRole.SEEKER) {
 			climbIfStuck();
 		}
-		if (!getWorld().isClient() && age % 100 == 50 && !NerisPresence.isManaged(getUuid())) {
+		if (!getWorld().isClient() && age % 100 == 50 && !NerisPresence.isManaged(getUuid()) && !com.worldbetween.war.WarPresence.isManaged(getUuid())) {
 			discard(); // nobody stands behind this one any more
 			return;
 		}
@@ -394,6 +460,72 @@ public class NerisEntity extends PathAwareEntity implements Merchant {
 	@Override
 	public boolean shouldSave() {
 		return false;
+	}
+
+	/**
+	 * A bowman's fight: keep eight to fourteen blocks off, draw, loose, and step back if the enemy comes in
+	 * close. Flyers are fair game: an arrow reaches an Arki that a blade never would.
+	 */
+	private class BowGoal extends Goal {
+		private int cooldown;
+
+		BowGoal() {
+			setControls(EnumSet.of(Control.MOVE, Control.LOOK));
+		}
+
+		@Override
+		public boolean canStart() {
+			return archer && getTarget() != null && getTarget().isAlive();
+		}
+
+		@Override
+		public boolean shouldRunEveryTick() {
+			return true;
+		}
+
+		@Override
+		public void start() {
+			setAttacking(true);
+		}
+
+		@Override
+		public void stop() {
+			setAttacking(false);
+			clearActiveItem();
+			getNavigation().stop();
+		}
+
+		@Override
+		public void tick() {
+			LivingEntity target = getTarget();
+			if (target == null) {
+				return;
+			}
+			getLookControl().lookAt(target, 30f, 30f);
+			double distance = Math.sqrt(squaredDistanceTo(target));
+			boolean sees = getVisibilityCache().canSee(target);
+			if (age % 10 == 0) {
+				if (!sees || distance > 15) {
+					getNavigation().startMovingTo(target, 1.0);
+				} else if (distance < 7) {
+					Vec3d away = getPos().subtract(target.getPos()).multiply(1, 0, 1).normalize().multiply(6).add(getPos());
+					getNavigation().startMovingTo(away.x, away.y, away.z, 1.15);
+				} else {
+					getNavigation().stop();
+				}
+			}
+			if (--cooldown > 0) {
+				if (cooldown == 18 && sees) {
+					setCurrentHand(Hand.MAIN_HAND); // drawing the bow
+				}
+				return;
+			}
+			if (sees && distance < 24) {
+				clearActiveItem();
+				shootAt(target, 1f);
+				cooldown = 35 + random.nextInt(15);
+			}
+		}
 	}
 
 	/** Walks towards a far destination in steps the pathfinder can manage. */

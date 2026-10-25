@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "###",
+    " / ",
+    " / "
+  ],
+  "key": {
+    "#": {
+      "item": "worldbetween:hewn_granite"
+    },
+    "/": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "id": "worldbetween:granite_pickaxe",
+    "count": 1
+  }
+}

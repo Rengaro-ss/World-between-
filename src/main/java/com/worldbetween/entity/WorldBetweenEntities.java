@@ -26,6 +26,12 @@ public final class WorldBetweenEntities {
 			EntityType.Builder.create(com.worldbetween.entity.arki.ArkiEntity::new, SpawnGroup.MISC).dimensions(0.6f, 1.8f)
 					.maxTrackingRange(10).build(WorldBetween.MOD_ID + ":arki"));
 
+	/** A sphere of the Arki's magic. */
+	public static final EntityType<com.worldbetween.entity.arki.ArkiOrbEntity> ARKI_ORB = Registry.register(Registries.ENTITY_TYPE,
+			Identifier.of(WorldBetween.MOD_ID, "arki_orb"),
+			EntityType.Builder.<com.worldbetween.entity.arki.ArkiOrbEntity>create(com.worldbetween.entity.arki.ArkiOrbEntity::new, SpawnGroup.MISC)
+					.dimensions(0.35f, 0.35f).maxTrackingRange(8).trackingTickInterval(1).build(WorldBetween.MOD_ID + ":arki_orb"));
+
 	private WorldBetweenEntities() {
 	}
 

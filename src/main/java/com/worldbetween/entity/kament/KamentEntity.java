@@ -41,19 +41,25 @@ import java.util.function.Consumer;
  * of its mountain. Slow and very hard to move; sinks in water rather than swims, and walks on along the
  * bottom. Like the Neris, they exist only while a player is near, and are never saved.
  */
-public class KamentEntity extends PathAwareEntity {
+public class KamentEntity extends PathAwareEntity implements com.worldbetween.trade.Stall.Keeper, com.worldbetween.entity.FactionMember {
 	private static final TrackedData<Integer> ROLE = DataTracker.registerData(KamentEntity.class, TrackedDataHandlerRegistry.INTEGER);
 	private static final TrackedData<Integer> MATERIAL = DataTracker.registerData(KamentEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
 	private BlockPos anchor;
 	private int anchorRadius = 4;
 	private BlockPos workSpot;
+	/** Where it is marching to: a war band's next stretch. */
+	private BlockPos destination;
 	private UUID quarry;
 	private String speechKey = "";
 	private Object[] speechArgs = new Object[0];
 	private Consumer<DamageSource> onDeath;
 	/** Client: ticks left of the overhead blow, for the animation. */
 	private int attackTicks;
+	/** Traders: the city they deal for, and whether this is its Ancient (charms) or a carver (stone). */
+	private int market = -1;
+	private boolean charmer;
+	private final com.worldbetween.trade.Stall stall = new com.worldbetween.trade.Stall();
 
 	public KamentEntity(EntityType<? extends PathAwareEntity> type, World world) {
 		super(type, world);
@@ -115,6 +121,20 @@ public class KamentEntity extends PathAwareEntity {
 		this.workSpot = workSpot;
 	}
 
+	public void setDestination(BlockPos destination) {
+		this.destination = destination;
+	}
+
+	@Override
+	public FactionType faction() {
+		return FactionType.KAMENT;
+	}
+
+	@Override
+	public boolean fights() {
+		return role().fights();
+	}
+
 	public void setQuarry(UUID quarry) {
 		this.quarry = quarry;
 	}
@@ -128,6 +148,29 @@ public class KamentEntity extends PathAwareEntity {
 		this.onDeath = onDeath;
 	}
 
+	/** Makes this Kament deal with strangers for its city: in stone, or (an Ancient) in charms. */
+	public void setTrader(int settlement, boolean charmer) {
+		this.market = settlement;
+		this.charmer = charmer;
+		addCommandTag(charmer ? "worldbetween.charmer" : "worldbetween.trader");
+	}
+
+	@Override
+	public com.worldbetween.trade.Stall stall() {
+		return stall;
+	}
+
+	@Override
+	public boolean isClient() {
+		return getWorld().isClient();
+	}
+
+	@Override
+	public void remove(RemovalReason reason) {
+		stall.close();
+		super.remove(reason);
+	}
+
 	public int attackTicks() {
 		return attackTicks;
 	}
@@ -137,12 +180,15 @@ public class KamentEntity extends PathAwareEntity {
 		// No swimming: stone sinks, and walks on along the bottom.
 		goalSelector.add(1, new MeleeAttackGoal(this, 1.0, true));
 		goalSelector.add(2, new FollowQuarryGoal());
+		goalSelector.add(3, new MarchGoal());
 		goalSelector.add(4, new WorkGoal());
 		goalSelector.add(5, new KeepNearGoal());
 		goalSelector.add(6, new LookAtEntityGoal(this, PlayerEntity.class, 12f));
 		goalSelector.add(7, new LookAroundGoal(this));
 		targetSelector.add(1, new RevengeGoal(this));
 		targetSelector.add(2, new ActiveTargetGoal<>(this, PlayerEntity.class, 10, true, false, this::isEnemy));
+		targetSelector.add(3, new ActiveTargetGoal<>(this, LivingEntity.class, 10, true, false,
+				target -> com.worldbetween.war.WarRules.isEnemy(this, target)));
 	}
 
 	/** The guards and the Ancients turn on whoever the people have judged an enemy. */
@@ -185,6 +231,12 @@ public class KamentEntity extends PathAwareEntity {
 			return ActionResult.SUCCESS;
 		}
 		Faction faction = WorldBetweenState.get(serverPlayer.getServer()).faction(FactionType.KAMENT);
+		if (market >= 0 && stall.customer() == null && getTarget() == null) {
+			com.worldbetween.faction.Settlement city = faction.settlements().stream().filter(s -> s.id() == market).findFirst().orElse(null);
+			if (city != null && com.worldbetween.trade.KamentTrade.open(this, serverPlayer, faction, city, charmer)) {
+				return ActionResult.SUCCESS;
+			}
+		}
 		String key = speechKey.isEmpty() ? "speech.worldbetween.kament." + role().id() + "." + random.nextInt(3) : speechKey;
 		if (faction.isCriminal(player.getUuid())) {
 			key = "speech.worldbetween.kament.enemy";
@@ -216,9 +268,17 @@ public class KamentEntity extends PathAwareEntity {
 			}
 			return;
 		}
-		if (age % 100 == 50 && !KamentPresence.isManaged(getUuid())) {
+		if (age % 100 == 50 && !KamentPresence.isManaged(getUuid()) && !com.worldbetween.war.WarPresence.isManaged(getUuid())) {
 			discard();
 			return;
+		}
+		stall.tick(this);
+		// One that keeps a fixed place (an Ancient on its seat, a guard at its post) and has been knocked or has
+		// fallen far from it, goes back: as if it had always stood there.
+		if (anchor != null && anchorRadius == 0 && getTarget() == null && quarry == null && age % 40 == 0
+				&& getBlockPos().getSquaredDistance(anchor) > 16) {
+			refreshPositionAndAngles(anchor.getX() + 0.5, anchor.getY(), anchor.getZ() + 0.5, getYaw(), 0);
+			getNavigation().stop();
 		}
 		setAir(getMaxAir()); // stone does not drown
 		if (isTouchingWater()) {
@@ -302,6 +362,38 @@ public class KamentEntity extends PathAwareEntity {
 					getNavigation().startMovingTo(player, 1.0);
 				}
 			}
+		}
+	}
+
+	/** Marches with its band towards a far point, a stretch at a time. */
+	private class MarchGoal extends Goal {
+		MarchGoal() {
+			setControls(EnumSet.of(Control.MOVE));
+		}
+
+		@Override
+		public boolean canStart() {
+			return destination != null && getTarget() == null && getBlockPos().getSquaredDistance(destination) > 9;
+		}
+
+		@Override
+		public boolean shouldContinue() {
+			return canStart();
+		}
+
+		@Override
+		public void tick() {
+			if (age % 40 != 0 && !getNavigation().isIdle()) {
+				return;
+			}
+			net.minecraft.util.math.Vec3d here = getPos();
+			net.minecraft.util.math.Vec3d toward = net.minecraft.util.math.Vec3d.ofBottomCenter(destination).subtract(here);
+			double distance = toward.horizontalLength();
+			net.minecraft.util.math.Vec3d step = distance > 16 ? here.add(toward.multiply(16 / distance)) : net.minecraft.util.math.Vec3d.ofBottomCenter(destination);
+			int x = (int) Math.floor(step.x);
+			int z = (int) Math.floor(step.z);
+			int y = getWorld().getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z);
+			getNavigation().startMovingTo(x + 0.5, y, z + 0.5, 1.0);
 		}
 	}
 

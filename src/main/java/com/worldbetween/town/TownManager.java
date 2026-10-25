@@ -47,6 +47,12 @@ public final class TownManager {
 		int[] budget = {BUDGET};
 		long deadline = System.nanoTime() + TIME_BUDGET_NANOS;
 		boolean books = server.getTicks() % BOOK_INTERVAL == 0;
+		for (TownFeatures.Feature field : com.worldbetween.war.BattlefieldFeatures.of(world)) {
+			if (budget[0] <= 0 || System.nanoTime() > deadline) {
+				return;
+			}
+			build(world, field, budget);
+		}
 		for (Faction faction : state.factions()) {
 			if (!faction.isActive()) {
 				continue;

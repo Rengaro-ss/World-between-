@@ -29,6 +29,7 @@ public class WorldBetweenState extends PersistentState {
 	private long lastWorldDay = -1;
 	private final EnumMap<FactionType, Faction> factions = new EnumMap<>(FactionType.class);
 	private final List<ChronicleEntry> chronicle = new ArrayList<>();
+	private com.worldbetween.war.WarState wars = new com.worldbetween.war.WarState();
 
 	public WorldBetweenState() {
 		for (FactionType type : FactionType.values()) {
@@ -66,6 +67,10 @@ public class WorldBetweenState extends PersistentState {
 		return factions.values();
 	}
 
+	public com.worldbetween.war.WarState wars() {
+		return wars;
+	}
+
 	public List<ChronicleEntry> chronicle() {
 		return chronicle;
 	}
@@ -88,6 +93,7 @@ public class WorldBetweenState extends PersistentState {
 		NbtList chronicleNbt = new NbtList();
 		chronicle.forEach(entry -> chronicleNbt.add(entry.toNbt()));
 		nbt.put("Chronicle", chronicleNbt);
+		nbt.put("War", wars.toNbt());
 		return nbt;
 	}
 
@@ -104,6 +110,9 @@ public class WorldBetweenState extends PersistentState {
 		NbtList chronicleNbt = nbt.getList("Chronicle", NbtElement.COMPOUND_TYPE);
 		for (int i = 0; i < chronicleNbt.size(); i++) {
 			state.chronicle.add(ChronicleEntry.fromNbt(chronicleNbt.getCompound(i)));
+		}
+		if (nbt.contains("War")) {
+			state.wars = com.worldbetween.war.WarState.fromNbt(nbt.getCompound("War"));
 		}
 		return state;
 	}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "###",
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "worldbetween:flint_shard"
+    }
+  },
+  "result": {
+    "id": "minecraft:flint",
+    "count": 1
+  }
+}

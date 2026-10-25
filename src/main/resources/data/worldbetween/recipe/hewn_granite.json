@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "worldbetween:chisel"
+    },
+    [
+      {
+        "item": "minecraft:granite"
+      },
+      {
+        "item": "minecraft:polished_granite"
+      }
+    ],
+    [
+      {
+        "item": "minecraft:granite"
+      },
+      {
+        "item": "minecraft:polished_granite"
+      }
+    ],
+    {
+      "item": "worldbetween:flint_shard"
+    }
+  ],
+  "result": {
+    "id": "worldbetween:hewn_granite",
+    "count": 1
+  }
+}

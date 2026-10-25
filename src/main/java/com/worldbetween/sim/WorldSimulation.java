@@ -52,6 +52,7 @@ public final class WorldSimulation {
 			}
 			behavior.simulateDay(context, faction);
 		}
+		com.worldbetween.war.WarSimulation.simulateDay(context);
 		state.markDirty();
 	}
 }
