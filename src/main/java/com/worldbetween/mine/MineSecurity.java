@@ -45,6 +45,7 @@ public final class MineSecurity {
 		final long deadline;
 		long lastInside;
 		final ServerBossBar bar;
+		java.util.List<java.util.UUID> guards = java.util.List.of();
 
 		Watch(MineManager.Site site, long start, long deadline, ServerBossBar bar) {
 			this.site = site;
@@ -105,6 +106,9 @@ public final class MineSecurity {
 		faction.changeReputation(player.getUuid(), -CRIMINAL_REPUTATION_LOSS);
 		state.markDirty();
 		player.sendMessage(Text.translatable("message.worldbetween.criminal", factionName).formatted(Formatting.RED));
+		// The guards are here now, and the stranger is a criminal: they stay to deal with it.
+		com.worldbetween.entity.NerisPresence.linger(player.getServer(), watch.guards, 1200);
+		watch.guards = java.util.List.of();
 		new SimulationContext(player.getServer(), state).chronicle(watch.site.owner(),
 				"chronicle.worldbetween." + watch.site.owner().id() + ".criminal",
 				player.getName().getString(), watch.site.settlement().name());
@@ -125,7 +129,9 @@ public final class MineSecurity {
 				BossBar.Color.RED, BossBar.Style.NOTCHED_10);
 		bar.addPlayer(player);
 		long now = player.getServer().getTicks();
-		WATCHES.put(player.getUuid(), new Watch(site, now, now + seconds * 20L, bar));
+		Watch watch = new Watch(site, now, now + seconds * 20L, bar);
+		watch.guards = com.worldbetween.entity.NerisPresence.dispatchMineGuards(player.getServerWorld(), site, player);
+		WATCHES.put(player.getUuid(), watch);
 		player.sendMessage(Text.translatable("message.worldbetween.noticed." + reason,
 				site.owner().displayName(), Math.max(1, Math.round(seconds / 60f))).formatted(Formatting.GOLD));
 	}
@@ -150,6 +156,7 @@ public final class MineSecurity {
 		Watch watch = WATCHES.remove(player.getUuid());
 		if (watch != null) {
 			watch.bar.clearPlayers();
+			com.worldbetween.entity.NerisPresence.recall(player.getServerWorld(), watch.guards);
 		}
 	}
 

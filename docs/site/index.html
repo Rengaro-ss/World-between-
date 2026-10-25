@@ -345,6 +345,7 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
     <a href="#mines">Шахты</a>
     <a href="#towns">Города</a>
     <a href="#court">Двор</a>
+    <a href="#people">Народ</a>
     <a href="#player">Игрок</a>
     <a href="#roadmap">План</a>
     <a href="#ideas">Идеи</a>
@@ -358,7 +359,7 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
     <p class="lead column">Мир делят три народа. Они растут, добывают ресурсы, строят и воюют, даже когда рядом нет ни одного игрока. Ты не их герой и не их король. Ты выживаешь между ними.</p>
     <div class="chips">
       <span class="chip live">в разработке · v0.1</span>
-      <span class="chip">экономика, шахты и города Нерис работают</span>
+      <span class="chip">экономика, города, двор и народ Нерис работают</span>
       <span class="chip">Minecraft 1.21.1</span>
       <span class="chip">Fabric Loader 0.17</span>
       <span class="chip">Java 21</span>
@@ -799,6 +800,38 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
   </div>
 </section>
 
+<section id="people">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Народ Нерис · работает в игре</span>
+      <h2>Люди на улицах и Искатели на дорогах</h2>
+      <p class="column muted">Бронзовая кожа, чёрные глаза без белков — следы жизни в адских кузнях. Нерис выходят в мир, когда рядом игрок: днём рабочие стоят у своих мест, горожане ходят по улицам, стража дежурит у башен, бароны принимают в ратушах, король сидит на троне. Всё это — видимая сторона симуляции, которая идёт и без игрока.</p>
+    </header>
+    <figure style="margin: 0 0 1.5rem;"><img src="img/people-skins.jpg" alt="Шесть персонажей Нерис: горожанин, рабочий, стражник, Искатель, барон, король" width="960" height="272" style="width:100%; height:auto; image-rendering: pixelated; border: 1px solid var(--line);" loading="lazy"><figcaption class="muted" style="font-size: var(--step--1); margin-top: 0.4rem;">Горожанин, рабочий, стражник, Искатель, барон и король. Скины нарисованы для мода.</figcaption></figure>
+    <div class="gallery">
+      <figure class="wide"><img src="img/people-plaza.jpg" alt="Площадь столицы с горожанами, стражником и Искателями" width="1280" height="720" loading="lazy"><figcaption><b>Площадь днём.</b> Горожане, стража, отдыхающие между походами Искатели.</figcaption></figure>
+      <figure class="wide"><img src="img/people-king.jpg" alt="Король Нерис на троне в короне, между золотыми блоками, за ним знамёна" width="1280" height="720" loading="lazy"><figcaption><b>Король на троне.</b> Его можно убить, и тогда на следующий день соберётся совет баронов. Королевство этого не простит.</figcaption></figure>
+      <figure class="wide"><img src="img/people-seeker.jpg" alt="Искатель Kaar-Sha в капюшоне и кольчуге; в чате: А, вот ты где. Я хотел на тебя посмотреть." width="1280" height="720" loading="lazy"><figcaption><b>Встреча с Искателем.</b> Kaar-Sha выследил игрока, рассмотрел его и ушёл с донесением в столицу.</figcaption></figure>
+      <figure class="wide"><img src="img/seeker-cairn.jpg" alt="Тур Искателя: каменная пирамида со знаменем на берегу" width="640" height="420" loading="lazy"><figcaption><b>Тур Искателя.</b> Так отмечено место будущего города. Королевство растёт только туда, где побывали Искатели.</figcaption></figure>
+    </div>
+
+    <div class="principles" style="margin-top: 2.5rem;">
+      <div class="principle"><h4>Искатели: места для городов</h4><p class="muted">Уходят на 260–400 блоков, оценивают место (биом, ровность, вода) и ставят тур со знаменем. Город основывают только там, где побывал Искатель.</p></div>
+      <div class="principle"><h4>Искатели: руда</h4><p class="muted">Обходят несколько точек вокруг города и выбирают самую богатую, холмистую землю. Там вбивают межевой столб, там и закладывают шахту.</p></div>
+      <div class="principle"><h4>Искатели: чужаки</h4><p class="muted">Раз в 12 дней королевство хочет знать, где ходит каждый игрок. Искатель находит его, рассматривает и уносит донесение. Королевство запоминает, где ты живёшь.</p></div>
+      <div class="principle"><h4>Элита</h4><p class="muted">Втрое крепче горожанина, кольчуга и незеритовый клинок; не застревают у стен и обрывов. Обучаются в казармах за снаряжение и монеты. Убить Искателя — преступление.</p></div>
+      <div class="principle"><h4>Стража шахт</h4><p class="muted">Заметив чужака, двое стражников поднимаются по стволу на его горизонт и идут к нему по туннелям. Не ушёл вовремя — нападают.</p></div>
+      <div class="principle"><h4>Поступки имеют цену</h4><p class="muted">Убитый горожанин — минус житель в городе и статус преступника. Убитый барон или король — запись в летописи, перевыборы и вражда королевства.</p></div>
+    </div>
+
+    <div class="timeline column" style="margin-top: 2.5rem;">
+      <div class="tl c-neris" style="--c: var(--neris)"><span class="when">День 3</span><div><h4>Портал и сигнальный дым</h4><p>Беглецы выходят в 400–900 блоках от точки появления. Над лагерем поднимается столб дыма, видный издалека.</p></div></div>
+      <div class="tl c-neris" style="--c: var(--neris)"><span class="when">Дни 4–11</span><div><h4>Туры по округе</h4><p>Два Искателя-основателя ставят туры со знамёнами в сотнях блоков от лагеря.</p></div></div>
+      <div class="tl c-neris" style="--c: var(--neris)"><span class="when">Дни ~5–12</span><div><h4>Тебя навещают</h4><p>Один из Искателей идёт туда, где ты, подходит, рассматривает и уходит. В чате: «Искатель X выследил чужака по имени…».</p></div></div>
+    </div>
+  </div>
+</section>
+
 <section id="player">
   <div class="wrap">
     <header>
@@ -890,7 +923,7 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
       <div class="stage"><span class="num">3</span><div><h4>Шахты Нерис</h4><p>Растущие шахты с тремя горизонтами, лавовыми каналами и кузней; охрана, статус преступника, метки собственности на добытом.</p></div><span class="status done">готово</span></div>
       <div class="stage"><span class="num">4</span><div><h4>Города Нерис</h4><p>Ратуши по уровням и тронный зал столицы, 4 вида домов, 20 видов зданий с реальной ролью в экономике, производственные цепочки, дороги, стены, дозорные башни, летописи в библиотеках, работа днём.</p></div><span class="status done">готово</span></div>
       <div class="stage"><span class="num">5</span><div><h4>Двор и личности</h4><p>Король и бароны с чертами и целями, выборы, заговоры, казна в железных самородках.</p></div><span class="status done">готово</span></div>
-      <div class="stage"><span class="num">6</span><div><h4>Существа Нерис</h4><p>Модели, текстуры и ИИ: жители, рабочие, стража, командиры. Рабочие займут уже размеченные рабочие места в зданиях.</p></div><span class="status now">следующий шаг</span></div>
+      <div class="stage"><span class="num">6</span><div><h4>Народ Нерис и Искатели</h4><p>Шесть ролей со своими скинами, жители и стража в городах, король на троне, стража шахт, Искатели: места для городов, руда, разведка чужаков.</p></div><span class="status done">первая версия</span></div>
       <div class="stage"><span class="num">7</span><div><h4>Репутация и торговля</h4><p>Отношение к каждому игроку, законы на территории, торговцы, контракты.</p></div><span class="status next">дальше</span></div>
       <div class="stage"><span class="num">8</span><div><h4>Адская кампания</h4><p>Форпосты Нерис в Нижнем мире, война с адской фауной, незерит.</p></div><span class="status next">дальше</span></div>
       <div class="stage"><span class="num">9</span><div><h4>Каменты</h4><p>Пробуждение, каменоломни, стены, монументы, запрет на руду.</p></div><span class="status next">дальше</span></div>

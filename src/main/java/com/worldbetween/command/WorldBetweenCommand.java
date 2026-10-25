@@ -71,6 +71,11 @@ public final class WorldBetweenCommand {
 										.then(CommandManager.argument("radius", IntegerArgumentType.integer(4, 64))
 												.executes(context -> mineMap(context, IntegerArgumentType.getInteger(context, "radius")))))))
 				.then(CommandManager.literal("town").executes(WorldBetweenCommand::town))
+				.then(CommandManager.literal("seekers")
+						.executes(WorldBetweenCommand::seekers)
+						.then(CommandManager.literal("scout")
+								.requires(source -> source.hasPermissionLevel(2))
+								.executes(WorldBetweenCommand::scoutMe)))
 				.then(CommandManager.literal("court")
 						.executes(WorldBetweenCommand::court)
 						.then(CommandManager.literal("kill")
@@ -287,6 +292,46 @@ public final class WorldBetweenCommand {
 				send(context, line);
 			}
 		}
+		return 1;
+	}
+
+	private static int seekers(CommandContext<ServerCommandSource> context) {
+		WorldBetweenState state = WorldBetweenState.get(context.getSource().getServer());
+		Faction faction = state.faction(FactionType.NERIS);
+		ServerWorld world = context.getSource().getServer().getOverworld();
+		double now = state.day() + (world.getTimeOfDay() % 24000L) / 24000.0;
+		send(context, Text.translatable("command.worldbetween.seekers.header", faction.knownSites().size()).formatted(Formatting.GOLD));
+		for (BlockPos site : faction.knownSites()) {
+			send(context, Text.translatable("command.worldbetween.seekers.site", site.getX(), site.getZ()).formatted(Formatting.GRAY));
+		}
+		for (com.worldbetween.faction.seekers.Seeker seeker : faction.seekers()) {
+			if (!seeker.isAlive()) {
+				continue;
+			}
+			BlockPos at = seeker.position(now);
+			String mission = seeker.mission() == null ? "idle" : seeker.mission().name().toLowerCase();
+			send(context, Text.literal(" ▪ " + seeker.name() + " ").append(Text.translatable("command.worldbetween.seekers.mission." + mission))
+					.append(Text.literal(String.format(" (%d, %d) → (%d, %d)", at.getX(), at.getZ(), seeker.target().getX(), seeker.target().getZ()))
+							.formatted(Formatting.GRAY)));
+		}
+		return 1;
+	}
+
+	/** Sends an idle (or the first) seeker to scout the player running the command, for testing. */
+	private static int scoutMe(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+		net.minecraft.server.network.ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
+		WorldBetweenState state = WorldBetweenState.get(context.getSource().getServer());
+		Faction faction = state.faction(FactionType.NERIS);
+		ServerWorld world = context.getSource().getServer().getOverworld();
+		double now = state.day() + (world.getTimeOfDay() % 24000L) / 24000.0;
+		com.worldbetween.faction.seekers.Seeker seeker = faction.seekers().stream().filter(com.worldbetween.faction.seekers.Seeker::isAlive)
+				.findFirst().orElse(null);
+		if (seeker == null) {
+			return 0;
+		}
+		BlockPos start = player.getBlockPos().add(48, 0, 0);
+		seeker.send(com.worldbetween.faction.seekers.Seeker.Mission.SCOUT, start, player.getBlockPos(), now, -1, player.getUuid());
+		state.markDirty();
 		return 1;
 	}
 

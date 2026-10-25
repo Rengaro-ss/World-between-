@@ -6,6 +6,9 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.util.math.MathHelper;
 
 import com.worldbetween.faction.court.Noble;
+import com.worldbetween.faction.seekers.Marker;
+import com.worldbetween.faction.seekers.Seeker;
+import net.minecraft.util.math.BlockPos;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -45,6 +48,14 @@ public class Faction {
 	private int nextNobleId;
 	/** Day the council of barons meets to elect a king, or NEVER if no election is pending. */
 	private long councilDay = NEVER;
+	private final List<Seeker> seekers = new ArrayList<>();
+	private int nextSeekerId;
+	/** Places seekers found good for a town, best first. */
+	private final List<BlockPos> knownSites = new ArrayList<>();
+	private final List<Marker> markers = new ArrayList<>();
+	private int nextMarkerId;
+	/** Where strangers (players) live, as found out by seekers. */
+	private final Map<UUID, BlockPos> strangers = new HashMap<>();
 
 	public Faction(FactionType type) {
 		this.type = type;
@@ -193,6 +204,32 @@ public class Faction {
 		this.councilDay = day;
 	}
 
+	public List<Seeker> seekers() {
+		return seekers;
+	}
+
+	public int nextSeekerId() {
+		return nextSeekerId++;
+	}
+
+	public List<BlockPos> knownSites() {
+		return knownSites;
+	}
+
+	public List<Marker> markers() {
+		return markers;
+	}
+
+	public Marker addMarker(Marker.Type type, BlockPos pos) {
+		Marker marker = new Marker(nextMarkerId++, type, pos);
+		markers.add(marker);
+		return marker;
+	}
+
+	public Map<UUID, BlockPos> strangers() {
+		return strangers;
+	}
+
 	public boolean isCriminal(UUID player) {
 		return criminals.containsKey(player);
 	}
@@ -259,6 +296,19 @@ public class Faction {
 		nbt.putInt("King", kingId);
 		nbt.putInt("NextNobleId", nextNobleId);
 		nbt.putLong("Council", councilDay);
+
+		NbtList seekersNbt = new NbtList();
+		seekers.forEach(seeker -> seekersNbt.add(seeker.toNbt()));
+		nbt.put("Seekers", seekersNbt);
+		nbt.putInt("NextSeekerId", nextSeekerId);
+		nbt.putLongArray("KnownSites", knownSites.stream().mapToLong(BlockPos::asLong).toArray());
+		NbtList markersNbt = new NbtList();
+		markers.forEach(marker -> markersNbt.add(marker.toNbt()));
+		nbt.put("Markers", markersNbt);
+		nbt.putInt("NextMarkerId", nextMarkerId);
+		NbtCompound strangersNbt = new NbtCompound();
+		strangers.forEach((player, pos) -> strangersNbt.putLong(player.toString(), pos.asLong()));
+		nbt.put("Strangers", strangersNbt);
 		return nbt;
 	}
 
@@ -326,6 +376,31 @@ public class Faction {
 		faction.kingId = nbt.contains("King") ? nbt.getInt("King") : -1;
 		faction.nextNobleId = nbt.getInt("NextNobleId");
 		faction.councilDay = nbt.contains("Council") ? nbt.getLong("Council") : NEVER;
+
+		NbtList seekersNbt = nbt.getList("Seekers", NbtElement.COMPOUND_TYPE);
+		for (int i = 0; i < seekersNbt.size(); i++) {
+			faction.seekers.add(Seeker.fromNbt(seekersNbt.getCompound(i)));
+		}
+		faction.nextSeekerId = nbt.getInt("NextSeekerId");
+		for (long site : nbt.getLongArray("KnownSites")) {
+			faction.knownSites.add(BlockPos.fromLong(site));
+		}
+		NbtList markersNbt = nbt.getList("Markers", NbtElement.COMPOUND_TYPE);
+		for (int i = 0; i < markersNbt.size(); i++) {
+			Marker marker = Marker.fromNbt(markersNbt.getCompound(i));
+			if (marker != null) {
+				faction.markers.add(marker);
+			}
+		}
+		faction.nextMarkerId = nbt.getInt("NextMarkerId");
+		NbtCompound strangersNbt = nbt.getCompound("Strangers");
+		for (String key : strangersNbt.getKeys()) {
+			try {
+				faction.strangers.put(UUID.fromString(key), BlockPos.fromLong(strangersNbt.getLong(key)));
+			} catch (IllegalArgumentException ignored) {
+				// Skip malformed entries rather than failing the whole load.
+			}
+		}
 		return faction;
 	}
 }

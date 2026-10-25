@@ -33,12 +33,14 @@ public class WorldBetween implements ModInitializer {
 	public void onInitialize() {
 		config = WorldBetweenConfig.load();
 		Ownership.register();
+		com.worldbetween.entity.WorldBetweenEntities.register();
 		WorldBetweenAttachments.register();
 		ServerTickEvents.END_SERVER_TICK.register(WorldSimulation::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(MineManager::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(MineSecurity::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(TownManager::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(TownActivity::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.NerisPresence::onServerTick);
 		PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
 			if (world instanceof ServerWorld serverWorld && player instanceof ServerPlayerEntity serverPlayer) {
 				MineSecurity.onBlockBroken(serverPlayer, serverWorld, pos, state);

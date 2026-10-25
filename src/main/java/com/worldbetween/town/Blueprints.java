@@ -165,6 +165,28 @@ public final class Blueprints {
 		new Blueprints(local, owner, seed, palette).dock(length);
 	}
 
+	/** A seeker's cairn: a heap of stones with the kingdom's banner, where a town could stand. */
+	public static void cairn(Local local, FactionType owner, long seed, Palette palette) {
+		Blueprints b = new Blueprints(local, owner, seed, palette);
+		b.l.box(-1, 1, -1, 1, 1, 1, Blocks.COBBLESTONE.getDefaultState());
+		b.l.set(0, 2, 0, Blocks.MOSSY_COBBLESTONE.getDefaultState());
+		b.l.set(1, 2, 0, Blocks.COBBLESTONE_SLAB.getDefaultState());
+		b.l.set(0, 3, 0, b.fence());
+		b.l.set(0, 4, 0, b.fence());
+		b.standingBanner(0, 5, 0, 4);
+		b.l.set(-1, 2, -1, Blocks.LANTERN.getDefaultState());
+	}
+
+	/** A seeker's survey stake, over the richest ground for a mine. */
+	public static void stake(Local local, FactionType owner, long seed, Palette palette) {
+		Blueprints b = new Blueprints(local, owner, seed, palette);
+		b.l.set(0, 1, 0, b.log(Direction.Axis.Y));
+		b.l.set(0, 2, 0, b.log(Direction.Axis.Y));
+		b.l.set(0, 3, 0, Blocks.ORANGE_WOOL.getDefaultState());
+		b.l.set(0, 4, 0, Blocks.LANTERN.getDefaultState());
+		b.l.set(1, 1, 0, Blocks.RAW_IRON_BLOCK.getDefaultState());
+	}
+
 	public static void plazaCenter(Local local, FactionType owner, long seed, Palette palette, int tier) {
 		new Blueprints(local, owner, seed, palette).monument(tier);
 	}
@@ -998,7 +1020,9 @@ public final class Blueprints {
 	private void monument(int tier) {
 		switch (tier) {
 			case 0 -> {
-				campfire(0, 1, 0, false);
+				// A signal fire: its smoke column shows the camp from far away.
+				l.set(0, 0, 0, Blocks.HAY_BLOCK.getDefaultState());
+				campfire(0, 1, 0, true);
 				for (int[] p : new int[][]{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}) {
 					l.set(p[0], 1, p[1], pal.log().getDefaultState().with(PillarBlock.AXIS,
 							p[0] == 0 ? Direction.Axis.X : Direction.Axis.Z));

@@ -445,6 +445,32 @@ public final class Court {
 		return score;
 	}
 
+	/** A noble was struck down in person, by a player or anything else. */
+	public static void slain(net.minecraft.server.MinecraftServer server, Faction faction, Noble noble,
+			net.minecraft.server.network.ServerPlayerEntity killer) {
+		if (!noble.isAlive()) {
+			return;
+		}
+		com.worldbetween.world.WorldBetweenState state = com.worldbetween.world.WorldBetweenState.get(server);
+		SimulationContext context = new SimulationContext(server, state);
+		Settlement seat = seatOf(faction, noble);
+		boolean king = noble == faction.king();
+		noble.die();
+		String place = seat == null ? "?" : seat.name();
+		String who = killer == null ? "?" : killer.getName().getString();
+		if (king) {
+			faction.setKing(null);
+			faction.setCouncilDay(state.day() + 1);
+		}
+		context.chronicle(faction.type(), "chronicle.worldbetween.court." + (king ? "king" : "baron") + "_slain",
+				noble.chronicleName(), place, who);
+		if (killer != null) {
+			faction.changeReputation(killer.getUuid(), king ? -100 : -50);
+			faction.declareCriminal(killer.getUuid(), state.day());
+		}
+		state.markDirty();
+	}
+
 	/** Kills the king, for testing the council. */
 	public static boolean killKing(SimulationContext context, Faction faction) {
 		Noble king = faction.king();

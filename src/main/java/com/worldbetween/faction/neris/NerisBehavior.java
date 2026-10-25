@@ -11,6 +11,8 @@ import com.worldbetween.faction.Settlement;
 import com.worldbetween.faction.court.Ambition;
 import com.worldbetween.faction.court.Court;
 import com.worldbetween.faction.court.Sphere;
+import com.worldbetween.faction.seekers.Seeker;
+import com.worldbetween.faction.seekers.Seekers;
 import com.worldbetween.mine.MineManager;
 import com.worldbetween.mine.MinePlan;
 import com.worldbetween.sim.LocationFinder;
@@ -89,6 +91,7 @@ public class NerisBehavior implements FactionBehavior {
 		context.chronicle(FactionType.NERIS, "chronicle.worldbetween.neris.arrival",
 				camp.name(), site.getX(), site.getZ());
 		Court.crownFounder(context, faction, camp);
+		Seekers.foundParty(context, faction, camp);
 		return true;
 	}
 
@@ -108,6 +111,7 @@ public class NerisBehavior implements FactionBehavior {
 		updateEra(context, faction);
 		expand(context, faction);
 		Court.simulateDay(context, faction);
+		Seekers.simulateDay(context, faction);
 	}
 
 	private void work(SimulationContext context, Faction faction, Settlement settlement) {
@@ -334,6 +338,11 @@ public class NerisBehavior implements FactionBehavior {
 	/** The shaft is sunk a short walk outside the town, at ground level. */
 	private static BlockPos mineEntrance(SimulationContext context, Settlement settlement) {
 		ServerWorld world = context.server().getOverworld();
+		if (settlement.mineSite() != null) {
+			BlockPos site = settlement.mineSite();
+			return new BlockPos(site.getX(), world.getChunkManager().getChunkGenerator().getHeight(site.getX(), site.getZ(),
+					Heightmap.Type.WORLD_SURFACE_WG, world, world.getChunkManager().getNoiseConfig()) - 1, site.getZ());
+		}
 		double angle = context.random().nextDouble() * Math.PI * 2;
 		double distance = MathHelper.lerp(context.random().nextDouble(), 95, 115);
 		int x = settlement.pos().getX() + (int) (Math.cos(angle) * distance);
@@ -506,15 +515,36 @@ public class NerisBehavior implements FactionBehavior {
 		if (parents.isEmpty()) {
 			return;
 		}
-		Settlement parent = parents.get(context.random().nextInt(parents.size()));
 		ServerWorld overworld = context.server().getOverworld();
-		BlockPos site = LocationFinder.findSite(context, overworld, FactionType.NERIS, parent.pos(),
-				context.config().minExpansionDistance, context.config().maxExpansionDistance);
+		// The kingdom settles where its seekers have been; only without any seekers left does it go blind.
+		Settlement parent = null;
+		BlockPos site = null;
+		for (BlockPos known : List.copyOf(faction.knownSites())) {
+			Settlement nearest = parents.stream().min(Comparator.comparingDouble(p -> p.pos().getSquaredDistance(known))).orElse(null);
+			boolean clear = faction.settlements().stream().allMatch(s -> s.pos().getSquaredDistance(known) > 200 * 200);
+			if (nearest != null && clear && nearest.pos().getSquaredDistance(known) < 600 * 600) {
+				parent = nearest;
+				site = known;
+				faction.knownSites().remove(known);
+				break;
+			}
+			if (!clear) {
+				faction.knownSites().remove(known);
+			}
+		}
+		if (site == null && faction.seekers().stream().noneMatch(Seeker::isAlive)) {
+			parent = parents.get(context.random().nextInt(parents.size()));
+			site = LocationFinder.findSite(context, overworld, FactionType.NERIS, parent.pos(),
+					context.config().minExpansionDistance, context.config().maxExpansionDistance);
+		}
 		// Try again in a few days rather than every day, searching is not free.
 		faction.setLastExpansionDay(context.day() - EXPANSION_COOLDOWN / 2);
-		if (site == null) {
+		if (site == null || parent == null) {
 			return;
 		}
+		BlockPos foundAt = site;
+		faction.markers().replaceAll(m -> m.type() == com.worldbetween.faction.seekers.Marker.Type.CAIRN && m.pos().getSquaredDistance(foundAt) < 16
+				? new com.worldbetween.faction.seekers.Marker(m.id(), m.type(), m.pos(), true) : m);
 		faction.takeResource(WOOD, 60);
 		faction.takeResource(STONE, 60);
 		long carried = faction.takeResource(FOOD, 30);

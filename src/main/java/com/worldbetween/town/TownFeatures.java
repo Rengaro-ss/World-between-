@@ -131,6 +131,28 @@ public final class TownFeatures {
 	private TownFeatures() {
 	}
 
+	/** Seeker markers of a faction, built like town features; a retired marker is taken down. */
+	public static List<Feature> markers(ServerWorld world, Faction faction) {
+		List<Feature> features = new ArrayList<>();
+		for (com.worldbetween.faction.seekers.Marker marker : faction.markers()) {
+			BlockPos pos = marker.pos();
+			BlockPos origin = pos.withY(Ground.floor(world, pos.getX(), pos.getZ()));
+			features.add(new Feature(faction.type().id() + "/marker_" + marker.id(), marker.retired() ? 1 : 0, null, v -> {
+				Canvas canvas = new Canvas();
+				if (v == 0) {
+					Canvas.Local local = canvas.at(origin, Direction.NORTH);
+					if (marker.type() == com.worldbetween.faction.seekers.Marker.Type.CAIRN) {
+						Blueprints.cairn(local, faction.type(), marker.id(), Palette.DARK_OAK);
+					} else {
+						Blueprints.stake(local, faction.type(), marker.id(), Palette.DARK_OAK);
+					}
+				}
+				return canvas;
+			}, null, null, new int[]{0, 1}));
+		}
+		return features;
+	}
+
 	public static List<Feature> of(ServerWorld world, Faction faction, Settlement settlement) {
 		TownLayout layout = TownLayout.of(world, settlement);
 		FactionType owner = faction.type();

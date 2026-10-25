@@ -35,6 +35,8 @@ public class Settlement {
 	private final List<Plot> plots = new ArrayList<>();
 	/** The town's own treasury in coins, which decides how many barons it can keep. */
 	private long coins;
+	/** Where a seeker found the best ground for this town's mine, or null. */
+	private BlockPos mineSite;
 	/** Buildings that had a full crew on the last simulated day; not saved, rebuilt every day. */
 	private final EnumMap<BuildingType, Integer> staffed = new EnumMap<>(BuildingType.class);
 
@@ -147,6 +149,14 @@ public class Settlement {
 		return plots;
 	}
 
+	public BlockPos mineSite() {
+		return mineSite;
+	}
+
+	public void setMineSite(BlockPos mineSite) {
+		this.mineSite = mineSite;
+	}
+
 	public long coins() {
 		return coins;
 	}
@@ -190,6 +200,9 @@ public class Settlement {
 		}
 		nbt.putInt("Parent", parentId);
 		nbt.putLong("Coins", coins);
+		if (mineSite != null) {
+			nbt.putLong("MineSite", mineSite.asLong());
+		}
 		NbtList plotsNbt = new NbtList();
 		plots.forEach(plot -> plotsNbt.add(plot.toNbt()));
 		nbt.put("Plots", plotsNbt);
@@ -221,6 +234,9 @@ public class Settlement {
 		}
 		settlement.parentId = nbt.contains("Parent") ? nbt.getInt("Parent") : -1;
 		settlement.coins = nbt.getLong("Coins");
+		if (nbt.contains("MineSite")) {
+			settlement.mineSite = BlockPos.fromLong(nbt.getLong("MineSite"));
+		}
 		NbtList plotsNbt = nbt.getList("Plots", NbtElement.COMPOUND_TYPE);
 		for (int i = 0; i < plotsNbt.size(); i++) {
 			Plot plot = Plot.fromNbt(plotsNbt.getCompound(i));

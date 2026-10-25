@@ -51,6 +51,12 @@ public final class TownManager {
 			if (!faction.isActive()) {
 				continue;
 			}
+			for (TownFeatures.Feature marker : TownFeatures.markers(world, faction)) {
+				if (budget[0] <= 0 || System.nanoTime() > deadline) {
+					return;
+				}
+				build(world, marker, budget);
+			}
 			for (Settlement settlement : faction.settlements()) {
 				if (settlement.dimension() != World.OVERWORLD) {
 					continue;
