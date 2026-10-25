@@ -83,4 +83,26 @@ public final class ChronicleBooks {
 		entity.setBook(book);
 		entity.markDirty();
 	}
+
+	/** "The Exodus": what the Neris remember of how they came, left on a lectern by the dead portal. */
+	public static void placeExodus(ServerWorld world, BlockPos pos) {
+		BlockState lectern = world.getBlockState(pos);
+		if (!lectern.isOf(Blocks.LECTERN) || !(world.getBlockEntity(pos) instanceof LecternBlockEntity entity)) {
+			return;
+		}
+		List<RawFilteredPair<Text>> pages = new ArrayList<>();
+		for (int i = 0; i < 4; i++) {
+			pages.add(RawFilteredPair.of(Text.translatable("book.worldbetween.exodus." + i)));
+		}
+		String title = "Exodus";
+		ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
+		book.set(DataComponentTypes.WRITTEN_BOOK_CONTENT, new WrittenBookContentComponent(
+				RawFilteredPair.of(title), "Neris", 0, pages, true));
+		com.worldbetween.item.Ownership.mark(book, com.worldbetween.faction.FactionType.NERIS);
+		if (!lectern.get(LecternBlock.HAS_BOOK)) {
+			world.setBlockState(pos, lectern.with(LecternBlock.HAS_BOOK, true), net.minecraft.block.Block.NOTIFY_LISTENERS);
+		}
+		entity.setBook(book);
+		entity.markDirty();
+	}
 }

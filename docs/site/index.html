@@ -346,6 +346,7 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
     <a href="#towns">Города</a>
     <a href="#court">Двор</a>
     <a href="#people">Народ</a>
+    <a href="#law">Закон</a>
     <a href="#player">Игрок</a>
     <a href="#roadmap">План</a>
     <a href="#ideas">Идеи</a>
@@ -358,8 +359,8 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
     <h1>World <span class="between">Between</span></h1>
     <p class="lead column">Мир делят три народа. Они растут, добывают ресурсы, строят и воюют, даже когда рядом нет ни одного игрока. Ты не их герой и не их король. Ты выживаешь между ними.</p>
     <div class="chips">
-      <span class="chip live">в разработке · v0.1</span>
-      <span class="chip">экономика, города, двор и народ Нерис работают</span>
+      <span class="chip live">в разработке · v0.6</span>
+      <span class="chip">экономика, города, двор, народ, торговля и закон Нерис работают</span>
       <span class="chip">Minecraft 1.21.1</span>
       <span class="chip">Fabric Loader 0.17</span>
       <span class="chip">Java 21</span>
@@ -832,6 +833,56 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
   </div>
 </section>
 
+<section id="law">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Закон, торговля и дороги · работает в игре</span>
+      <h2>Куда пускают, кто торгует, кто в пути</h2>
+      <p class="column muted">В королевстве нельзя просто ходить где хочешь. Улицы и рынок открыты тем, кого терпят, ратуша — тем, кому доверяют, а тронный зал — только тем, кого королевство уважает. Купцы торгуют настоящими запасами со складов. По дорогам между городами ходят патрули, караваны и переселенцы, и пока они в пути, дома их нет.</p>
+    </header>
+
+    <div class="gallery">
+      <figure class="wide"><img src="img/arrival-portal.jpg" alt="Горящий адский портал на пятне незерака; из него вышел король Нерис в чёрном с золотом" width="1280" height="720" loading="lazy"><figcaption><b>Прибытие, день 3.</b> Портал горит, основатели выходят по одному: двое Искателей, король, рабочие и горожане.</figcaption></figure>
+      <figure class="wide"><img src="img/arrival-collapse.jpg" alt="Портал взрывается облаком дыма и лавовых брызг" width="1280" height="720" loading="lazy"><figcaption><b>Пути назад нет.</b> Последний прошёл, портал треснул и погас. Мёртвый портал с книгой «Исход» на кафедре остаётся навсегда.</figcaption></figure>
+      <figure class="wide"><img src="img/gate-guards.jpg" alt="Вход в тронный зал: двойные двери, по бокам два стражника в железе" width="1280" height="720" loading="lazy"><figcaption><b>Стража у дверей.</b> У каждой ратуши стоят двое. В тронный зал пускают с репутацией от 50, к барону — от 20.</figcaption></figure>
+      <figure class="wide"><img src="img/gate-fight.jpg" alt="Стражник вышел навстречу и загородил проход; в чате предупреждения" width="1280" height="720" loading="lazy"><figcaption><b>Ослушался — бой.</b> Дважды отталкивают с предупреждением, на третий раз: «Ты сам это выбрал. К оружию!»</figcaption></figure>
+      <figure class="wide"><img src="img/throne-audience.jpg" alt="Вид из дверей тронного зала: оранжевая дорожка, король на троне между золотыми блоками" width="1280" height="720" loading="lazy"><figcaption><b>Аудиенция.</b> С репутацией 50+ стража расступается. Король говорит согласно своей цели, первая аудиенция попадает в летопись и даёт +5.</figcaption></figure>
+      <figure class="wide"><img src="img/trade-ui.jpg" alt="Окно обмена купца Kaira-Sha: баранина, доски, каменный кирпич, уголь, кожа, оранжевая шерсть, железо за самородки" width="1280" height="720" loading="lazy"><figcaption><b>Торговля.</b> Обычное окно обмена, но товар — с настоящих складов, а цена — в железных самородках и зависит от репутации.</figcaption></figure>
+      <figure class="wide"><img src="img/town-unwelcome.jpg" alt="Улица столицы, сверху жёлтая полоса «Стража выдворяет вас из Karuld»" width="1280" height="720" loading="lazy"><figcaption><b>Нежеланный гость.</b> С репутацией ниже −20 стража выдворяет из города, ночью в обнесённых стеной городах действует комендантский час.</figcaption></figure>
+      <figure class="wide"><img src="img/road-patrol.jpg" alt="Двое стражников идут по мощёной дороге через лес" width="760" height="428" loading="lazy"><figcaption><b>Патруль на дороге.</b> Двое стражников идут в соседний город и обратно. Пока они в пути, у их башен никого.</figcaption></figure>
+    </div>
+
+    <div class="levels">
+      <table>
+        <thead><tr><th>Репутация</th><th>Как зовут</th><th>Что можно</th></tr></thead>
+        <tbody>
+          <tr><td class="y">преступник</td><td>вне закона</td><td>Стража и Искатели нападают при встрече, купцы не торгуют</td></tr>
+          <tr><td class="y">ниже −20</td><td>нежеланный</td><td>В город не пускают: от 30 секунд на то, чтобы уйти (зависит от характера лордов), иначе — преступник. Купцы не торгуют</td></tr>
+          <tr><td class="y">−20…9</td><td>чужак</td><td>Улицы, площадь, рынок днём; цены выше (×1,3 при минусе). Ночью за стенами нельзя</td></tr>
+          <tr><td class="y">10…19</td><td>знакомый</td><td>Можно остаться в городе ночью</td></tr>
+          <tr><td class="y">20…49</td><td>доверенный</td><td>Бароны принимают в ратуше; от 30 — шахты, казармы и склады, цены ×0,85</td></tr>
+          <tr><td class="y">50 и выше</td><td>почётный гость</td><td>Аудиенция у короля; от 60 — лучшие цены (×0,75)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="principles" style="margin-top: 2.5rem;">
+      <div class="principle"><h4>Товар со складов</h4><p class="muted">Купцы продают только то, что королевство может отдать сверх запаса: хлеб, если еды много; мечи и кирасы — если есть снаряжение. Купленное помечено «Куплено у Нерис», это не краденое.</p></div>
+      <div class="principle"><h4>Покупают нехватку</h4><p class="muted">Королевство скупает то, чего ему не хватает (брёвна, уголь, руду, зерно), и платит самородками из казны города. Если товара совсем мало, платит в полтора раза больше.</p></div>
+      <div class="principle"><h4>Как заслужить доверие</h4><p class="muted">Привезти то, чего не хватает (+1, при острой нехватке +2, до +6 в день); бить чудовищ у стен (+1, до +5 в день); первая аудиенция у короля (+5).</p></div>
+      <div class="principle"><h4>Двери и закрытые здания</h4><p class="muted">Стража у дверей не даёт войти в ратушу. Пролез через окно или подкоп — 10 секунд, чтобы выйти. Казармы и склады закрыты для всех, у кого репутация ниже 30.</p></div>
+      <div class="principle"><h4>Дороги живут</h4><p class="muted">Патрули (двое стражников) ходят раз в 3 дня, караваны (купец, возчик с ослом и охранник) — раз в 4 дня. С купцом каравана можно торговать прямо на дороге.</p></div>
+      <div class="principle"><h4>Переселенцы идут пешком</h4><p class="muted">Новый город основывают не мгновенно. Шестеро переселенцев два дня идут к туру Искателя, и город появляется, когда они дойдут. Их можно встретить по пути.</p></div>
+    </div>
+
+    <div class="timeline column" style="margin-top: 2.5rem;">
+      <div class="tl c-neris" style="--c: var(--neris)"><span class="when">День 3, утро</span><div><h4>Вспышка для всех</h4><p>Каждый игрок слышит далёкий гром с нужной стороны и читает: «На западе, примерно в 300 блоках отсюда, небо на миг полыхнуло багровым…»</p></div></div>
+      <div class="tl c-neris" style="--c: var(--neris)"><span class="when">10 минут</span><div><h4>Портал ещё горит</h4><p>Кто успеет дойти, увидит, как из портала выходят основатели и идут к лагерю, а за ними портал трескается.</p></div></div>
+      <div class="tl c-neris" style="--c: var(--neris)"><span class="when">Навсегда</span><div><h4>Мёртвый портал</h4><p>Рама из обсидиана с плачущими блоками, пятно незерака, сбитые цепи и книга «Исход» — история Нерис их же словами.</p></div></div>
+    </div>
+  </div>
+</section>
+
 <section id="player">
   <div class="wrap">
     <header>
@@ -870,7 +921,7 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
     </header>
     <div class="timeline column">
       <div class="tl"><span class="when">Дни 0–2</span><div><h4>Тишина</h4><p>Обычный Minecraft. Игрок строит первое убежище.</p></div></div>
-      <div class="tl c-neris" style="--c: var(--neris)"><span class="when">День 3</span><div><h4>Портал на равнине</h4><p>Вспыхивает адский портал, из него выходят беглецы Нерис и разбивают первый лагерь.</p></div></div>
+      <div class="tl c-neris" style="--c: var(--neris)"><span class="when">День 3</span><div><h4>Портал на равнине</h4><p>Небо полыхает багровым, гром слышат все. Из адского портала выходят беглецы Нерис, портал за ними трескается, и они разбивают первый лагерь.</p></div></div>
       <div class="tl c-arki" style="--c: var(--arki)"><span class="when">Ночь ~5</span><div><h4>Первая комета</h4><p>Над океаном пролетает комета. Утром на воде стоит капсула Арков.</p></div></div>
       <div class="tl c-kament" style="--c: var(--kament)"><span class="when">День ~7</span><div><h4>Гора открывает глаза</h4><p>Утёс в горах оказывается спящим гигантом. Каменты пробуждаются.</p></div></div>
       <div class="tl"><span class="when">Дальше</span><div><h4>История мира</h4><p>Её пишут три народа, а игрок может лишь подтолкнуть её в ту или иную сторону.</p></div></div>
@@ -924,7 +975,7 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
       <div class="stage"><span class="num">4</span><div><h4>Города Нерис</h4><p>Ратуши по уровням и тронный зал столицы, 4 вида домов, 20 видов зданий с реальной ролью в экономике, производственные цепочки, дороги, стены, дозорные башни, летописи в библиотеках, работа днём.</p></div><span class="status done">готово</span></div>
       <div class="stage"><span class="num">5</span><div><h4>Двор и личности</h4><p>Король и бароны с чертами и целями, выборы, заговоры, казна в железных самородках.</p></div><span class="status done">готово</span></div>
       <div class="stage"><span class="num">6</span><div><h4>Народ Нерис и Искатели</h4><p>Шесть ролей со своими скинами, жители и стража в городах, король на троне, стража шахт, Искатели: места для городов, руда, разведка чужаков.</p></div><span class="status done">первая версия</span></div>
-      <div class="stage"><span class="num">7</span><div><h4>Репутация и торговля</h4><p>Отношение к каждому игроку, законы на территории, торговцы, контракты.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">7</span><div><h4>Закон, торговля, дороги и прибытие</h4><p>Пропуск по репутации, стража у дверей ратуш, комендантский час, аудиенции; купцы со складским товаром; патрули, караваны и переселенцы на дорогах; зрелищное прибытие через портал. Дальше — контракты и взятки.</p></div><span class="status done">первая версия</span></div>
       <div class="stage"><span class="num">8</span><div><h4>Адская кампания</h4><p>Форпосты Нерис в Нижнем мире, война с адской фауной, незерит.</p></div><span class="status next">дальше</span></div>
       <div class="stage"><span class="num">9</span><div><h4>Каменты</h4><p>Пробуждение, каменоломни, стены, монументы, запрет на руду.</p></div><span class="status next">дальше</span></div>
       <div class="stage"><span class="num">10</span><div><h4>Арки</h4><p>Кометные капсулы, города на воде, небесные острова, звёздная магия.</p></div><span class="status next">дальше</span></div>

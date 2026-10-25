@@ -50,6 +50,40 @@ public final class TownLayout {
 	public record Pier(BlockPos shore, Direction direction, int length) {
 	}
 
+	/**
+	 * The town hall as it stands at a tier: where it is, which way its door faces (towards the square),
+	 * and how far it reaches. Local coordinates are the blueprint's: x across, z from the door (-depth) to the back.
+	 */
+	public record Hall(BlockPos center, Direction facing, int halfWidth, int halfDepth, boolean throne) {
+		public Canvas.Local local() {
+			return new Canvas().at(center, facing);
+		}
+
+		/** The doorway itself, at floor level. */
+		public BlockPos door() {
+			return local().world(0, 1, -halfDepth);
+		}
+
+		/** Just outside the door, {@code steps} out and {@code across} to the side. */
+		public BlockPos outside(int across, int steps) {
+			return local().world(across, 1, -halfDepth - steps);
+		}
+
+		/** Half the width of the doorway: the throne hall has double doors. */
+		public int doorHalf() {
+			return throne ? 1 : 0;
+		}
+
+		/** Whether a position is inside the hall's walls. */
+		public boolean contains(BlockPos pos) {
+			BlockPos a = local().world(-(halfWidth - 1), 1, -(halfDepth - 1));
+			BlockPos b = local().world(halfWidth - 1, 1, halfDepth - 1);
+			return pos.getX() >= Math.min(a.getX(), b.getX()) && pos.getX() <= Math.max(a.getX(), b.getX())
+					&& pos.getZ() >= Math.min(a.getZ(), b.getZ()) && pos.getZ() <= Math.max(a.getZ(), b.getZ())
+					&& pos.getY() >= center.getY() && pos.getY() <= center.getY() + 14;
+		}
+	}
+
 	private final int centerX;
 	private final int centerZ;
 	private final int groundY;
@@ -148,6 +182,25 @@ public final class TownLayout {
 
 	public BlockPos center() {
 		return new BlockPos(centerX, groundY, centerZ);
+	}
+
+	/** The town hall at a tier; the capital's becomes the throne hall at the third tier. */
+	public Hall hall(int tier, boolean capital) {
+		boolean throne = capital && tier >= 3;
+		int depth = Blueprints.townHallDepth(tier, throne);
+		BlockPos hallCenter = center().offset(hallSide, plazaHalf(tier) + 1 + (depth + 1) / 2);
+		int halfDepth = depth / 2;
+		return new Hall(hallCenter, hallSide.getOpposite(), throne ? 6 : halfDepth, halfDepth, throne);
+	}
+
+	/** Half the side of the square that counts as the town: the wall, or a little past the street ends. */
+	public static int zoneHalf(int tier) {
+		return tier >= 2 ? wallHalf(tier) : tier == 0 ? 24 : streetLength(tier) + 10;
+	}
+
+	public boolean contains(BlockPos pos, int tier) {
+		int half = zoneHalf(tier);
+		return Math.abs(pos.getX() - centerX) <= half && Math.abs(pos.getZ() - centerZ) <= half;
 	}
 
 	public long seed() {

@@ -175,4 +175,17 @@ for name in ("front", "back", "right", "left"):
     for i in range(0, bw, 3):
         s.px(bx + i, by, GOLD)
 s.save("king")
+
+# Merchant: a long ochre coat with black cuffs, a satchel strap and a coin purse.
+s = base(7, beard=True)
+OCHRE = (176, 120, 52)
+clothe(s, OCHRE, (64, 46, 34), (40, 28, 22), belt=(60, 40, 26))
+s.fill(RARM, BLACK, rows=(9, 12)); s.fill(LARM, BLACK, rows=(9, 12))
+s.fill(RLEG, OCHRE, overlay=True, rows=(0, 6), faces_=("front", "right", "left", "back"), amount=5)
+s.fill(LLEG, OCHRE, overlay=True, rows=(0, 6), faces_=("front", "right", "left", "back"), amount=5)
+x, y, w, h = faces(BODY)["front"]
+for k in range(8):
+    s.px(x + k, y + k if k < 8 else y + 7, (70, 46, 30))
+s.px(x + 6, y + 9, GREY); s.px(x + 6, y + 10, GREY); s.px(x + 5, y + 10, GREY)
+s.save("merchant")
 print("ok")

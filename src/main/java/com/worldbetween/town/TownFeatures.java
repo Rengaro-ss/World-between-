@@ -248,6 +248,16 @@ public final class TownFeatures {
 			}, null, null, new int[]{0}));
 		}
 
+		if (settlement.isCapital() && faction.portal() != null) {
+			BlockPos portal = faction.portal();
+			BlockPos origin = portal.withY(Ground.floor(world, portal.getX(), portal.getZ()));
+			features.add(new Feature(base + "portal", 0, null, v -> {
+				Canvas canvas = new Canvas();
+				Blueprints.deadPortal(canvas.at(origin, facingToward(origin, center)), owner, seed, palette);
+				return canvas;
+			}, null, null, new int[]{0}));
+		}
+
 		Settlement parent = faction.settlements().stream().filter(s -> s.id() == settlement.parentId()).findFirst().orElse(null);
 		if (parent != null) {
 			TownLayout parentLayout = TownLayout.of(world, parent);
@@ -439,24 +449,8 @@ public final class TownFeatures {
 	private static LongSet roadColumns(long seed, TownLayout fromTown, int fromTier, TownLayout toTown, int toTier) {
 		BlockPos fromCenter = fromTown.center();
 		BlockPos toCenter = toTown.center();
-		BlockPos from = nearestGate(fromTown, fromTier, toCenter);
-		BlockPos to = nearestGate(toTown, toTier, fromCenter);
 		LongSet columns = new LongLinkedOpenHashSet();
-		if (from == null || to == null) {
-			return columns;
-		}
-		Random random = Random.create(seed * 31 + 7);
-		List<double[]> points = new ArrayList<>();
-		double length = Math.sqrt(from.getSquaredDistance(to));
-		int segments = Math.max(1, (int) (length / 40));
-		double nx = -(to.getZ() - from.getZ()) / Math.max(1, length);
-		double nz = (to.getX() - from.getX()) / Math.max(1, length);
-		for (int i = 0; i <= segments; i++) {
-			double t = i / (double) segments;
-			double wobble = i == 0 || i == segments ? 0 : (random.nextDouble() - 0.5) * 20;
-			points.add(new double[]{from.getX() + (to.getX() - from.getX()) * t + nx * wobble,
-					from.getZ() + (to.getZ() - from.getZ()) * t + nz * wobble});
-		}
+		List<double[]> points = roadPoints(seed, fromTown, fromTier, toTown, toTier);
 		int fromHalf = TownLayout.wallHalf(fromTier);
 		int toHalf = TownLayout.wallHalf(toTier);
 		for (int i = 0; i < points.size() - 1; i++) {
@@ -481,6 +475,85 @@ public final class TownFeatures {
 		return columns;
 	}
 
+	/** The bends of the road between two towns, gate to gate. */
+	private static List<double[]> roadPoints(long seed, TownLayout fromTown, int fromTier, TownLayout toTown, int toTier) {
+		BlockPos from = nearestGate(fromTown, fromTier, toTown.center());
+		BlockPos to = nearestGate(toTown, toTier, fromTown.center());
+		List<double[]> points = new ArrayList<>();
+		if (from == null || to == null) {
+			return points;
+		}
+		Random random = Random.create(seed * 31 + 7);
+		double length = Math.sqrt(from.getSquaredDistance(to));
+		int segments = Math.max(1, (int) (length / 40));
+		double nx = -(to.getZ() - from.getZ()) / Math.max(1, length);
+		double nz = (to.getX() - from.getX()) / Math.max(1, length);
+		for (int i = 0; i <= segments; i++) {
+			double t = i / (double) segments;
+			double wobble = i == 0 || i == segments ? 0 : (random.nextDouble() - 0.5) * 20;
+			points.add(new double[]{from.getX() + (to.getX() - from.getX()) * t + nx * wobble,
+					from.getZ() + (to.getZ() - from.getZ()) * t + nz * wobble});
+		}
+		return points;
+	}
+
+	/**
+	 * The way between two neighbouring towns, square to square: out along a street, down the road, in along
+	 * the other town's street. Null if no road joins them.
+	 */
+	public static List<BlockPos> roadRoute(ServerWorld world, Settlement a, Settlement b) {
+		Settlement child = a.parentId() == b.id() ? a : b.parentId() == a.id() ? b : null;
+		if (child == null) {
+			return null;
+		}
+		Settlement parent = child == a ? b : a;
+		TownLayout parentLayout = TownLayout.of(world, parent);
+		TownLayout childLayout = TownLayout.of(world, child);
+		List<double[]> road = roadPoints(childLayout.seed(), parentLayout, parent.tier(), childLayout, child.tier());
+		if (road.isEmpty()) {
+			return null;
+		}
+		List<BlockPos> route = new ArrayList<>(throughStreet(parentLayout, parent.tier(), childLayout.center()));
+		for (double[] p : road) {
+			route.add(new BlockPos((int) Math.round(p[0]), 0, (int) Math.round(p[1])));
+		}
+		List<BlockPos> end = new ArrayList<>(throughStreet(childLayout, child.tier(), parentLayout.center()));
+		java.util.Collections.reverse(end);
+		route.addAll(end);
+		if (child == a) {
+			java.util.Collections.reverse(route);
+		}
+		return route;
+	}
+
+	/** From the square out along the street that leads towards {@code toward}, to its gate. */
+	public static List<BlockPos> throughStreet(TownLayout town, int tier, BlockPos toward) {
+		List<BlockPos> points = new ArrayList<>();
+		points.add(town.center().withY(0));
+		TownLayout.Street street = gateStreet(town, tier, toward);
+		if (street == null) {
+			return points;
+		}
+		int end = TownLayout.wallHalf(tier) + 3;
+		for (int d = TownLayout.plazaHalf(tier) + 2; d < end; d += 6) {
+			points.add(town.streetPoint(street, d));
+		}
+		points.add(town.streetPoint(street, end));
+		return points;
+	}
+
+	private static TownLayout.Street gateStreet(TownLayout town, int tier, BlockPos toward) {
+		int distance = TownLayout.wallHalf(tier) + 3;
+		TownLayout.Street best = null;
+		for (TownLayout.Street street : town.streets()) {
+			if (best == null || town.streetPoint(street, distance).getSquaredDistance(toward.withY(0))
+					< town.streetPoint(best, distance).getSquaredDistance(toward.withY(0))) {
+				best = street;
+			}
+		}
+		return best;
+	}
+
 	private static BlockPos nearestGate(TownLayout town, int tier, BlockPos toward) {
 		int distance = TownLayout.wallHalf(tier) + 3;
 		BlockPos best = null;
@@ -493,7 +566,7 @@ public final class TownFeatures {
 		return best;
 	}
 
-	private static Direction facingToward(BlockPos from, BlockPos to) {
+	public static Direction facingToward(BlockPos from, BlockPos to) {
 		int dx = to.getX() - from.getX();
 		int dz = to.getZ() - from.getZ();
 		if (Math.abs(dx) > Math.abs(dz)) {

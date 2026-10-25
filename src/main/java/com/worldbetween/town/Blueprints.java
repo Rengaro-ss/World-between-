@@ -166,6 +166,60 @@ public final class Blueprints {
 	}
 
 	/** A seeker's cairn: a heap of stones with the kingdom's banner, where a town could stand. */
+	/** Interior of the portal the founders came through, in local coordinates: two across, three high. */
+	public static final int[][] PORTAL_INSIDE = {{0, 2}, {1, 2}, {0, 3}, {1, 3}, {0, 4}, {1, 4}};
+
+	/**
+	 * The portal the founders came through, dead now: an obsidian frame with weeping blocks, scorched
+	 * nether ground around it, the broken chains of the Forge-masters' slaves, and the book of the Exodus.
+	 */
+	public static void deadPortal(Local local, FactionType owner, long seed, Palette palette) {
+		Blueprints b = new Blueprints(local, owner, seed, palette);
+		Random random = Random.create(seed);
+		BlockState obsidian = Blocks.OBSIDIAN.getDefaultState();
+		BlockState crying = Blocks.CRYING_OBSIDIAN.getDefaultState();
+		for (int x = -5; x <= 6; x++) {
+			for (int z = -4; z <= 4; z++) {
+				double d = Math.hypot(x - 0.5, z * 1.2);
+				if (d > 4.5 + random.nextFloat() * 1.5) {
+					continue;
+				}
+				int roll = random.nextInt(10);
+				BlockState ground = (roll < 6 ? Blocks.NETHERRACK : roll < 8 ? Blocks.BLACKSTONE : roll < 9 ? Blocks.MAGMA_BLOCK
+						: Blocks.SOUL_SOIL).getDefaultState();
+				b.l.set(x, 0, z, ground);
+				for (int y = 1; y <= 7; y++) {
+					boolean inside = x >= 0 && x <= 1 && z == 0 && y >= 2 && y <= 4;
+					if (!inside) {
+						b.l.clear(x, y, z);
+					}
+				}
+			}
+		}
+		for (int x = -1; x <= 2; x++) {
+			b.l.set(x, 1, 0, x == 2 ? crying : obsidian);
+		}
+		for (int y = 2; y <= 4; y++) {
+			b.l.set(-1, y, 0, obsidian);
+			b.l.set(2, y, 0, y == 3 ? crying : obsidian);
+		}
+		b.l.set(0, 5, 0, crying);
+		b.l.set(1, 5, 0, obsidian);
+		b.l.set(2, 5, 0, obsidian);
+		// The chains they wore, left where they fell.
+		b.l.set(-3, 1, -1, Blocks.CHAIN.getDefaultState().with(net.minecraft.block.ChainBlock.AXIS, Direction.Axis.X));
+		b.l.set(-2, 1, -2, Blocks.CHAIN.getDefaultState().with(net.minecraft.block.ChainBlock.AXIS, Direction.Axis.Z));
+		b.l.set(3, 1, -2, Blocks.CHAIN.getDefaultState().with(net.minecraft.block.ChainBlock.AXIS, Direction.Axis.X));
+		b.l.set(4, 1, 1, Blocks.IRON_BARS.getDefaultState());
+		b.l.set(-3, 1, 2, Blocks.POLISHED_BLACKSTONE_WALL.getDefaultState());
+		b.l.set(-3, 2, 2, Blocks.SOUL_LANTERN.getDefaultState());
+		b.l.set(4, 1, -1, Blocks.LECTERN.getDefaultState().with(LecternBlock.FACING, Direction.NORTH).with(LecternBlock.HAS_BOOK, true));
+		b.l.hook(4, 1, -1, ChronicleBooks::placeExodus);
+		b.l.set(-3, 1, -3, b.fence());
+		b.l.set(-3, 2, -3, b.fence());
+		b.standingBanner(-3, 3, -3, 8);
+	}
+
 	public static void cairn(Local local, FactionType owner, long seed, Palette palette) {
 		Blueprints b = new Blueprints(local, owner, seed, palette);
 		b.l.box(-1, 1, -1, 1, 1, 1, Blocks.COBBLESTONE.getDefaultState());

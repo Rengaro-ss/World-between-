@@ -6,6 +6,7 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.util.math.MathHelper;
 
 import com.worldbetween.faction.court.Noble;
+import com.worldbetween.faction.journeys.Journey;
 import com.worldbetween.faction.seekers.Marker;
 import com.worldbetween.faction.seekers.Seeker;
 import net.minecraft.util.math.BlockPos;
@@ -56,6 +57,10 @@ public class Faction {
 	private int nextMarkerId;
 	/** Where strangers (players) live, as found out by seekers. */
 	private final Map<UUID, BlockPos> strangers = new HashMap<>();
+	private final List<Journey> journeys = new ArrayList<>();
+	private int nextJourneyId;
+	/** The dead portal the founders came through. */
+	private BlockPos portal;
 
 	public Faction(FactionType type) {
 		this.type = type;
@@ -230,6 +235,22 @@ public class Faction {
 		return strangers;
 	}
 
+	public List<Journey> journeys() {
+		return journeys;
+	}
+
+	public int nextJourneyId() {
+		return nextJourneyId++;
+	}
+
+	public BlockPos portal() {
+		return portal;
+	}
+
+	public void setPortal(BlockPos portal) {
+		this.portal = portal;
+	}
+
 	public boolean isCriminal(UUID player) {
 		return criminals.containsKey(player);
 	}
@@ -309,6 +330,13 @@ public class Faction {
 		NbtCompound strangersNbt = new NbtCompound();
 		strangers.forEach((player, pos) -> strangersNbt.putLong(player.toString(), pos.asLong()));
 		nbt.put("Strangers", strangersNbt);
+		NbtList journeysNbt = new NbtList();
+		journeys.forEach(journey -> journeysNbt.add(journey.toNbt()));
+		nbt.put("Journeys", journeysNbt);
+		nbt.putInt("NextJourneyId", nextJourneyId);
+		if (portal != null) {
+			nbt.putLong("Portal", portal.asLong());
+		}
 		return nbt;
 	}
 
@@ -400,6 +428,17 @@ public class Faction {
 			} catch (IllegalArgumentException ignored) {
 				// Skip malformed entries rather than failing the whole load.
 			}
+		}
+		NbtList journeysNbt = nbt.getList("Journeys", NbtElement.COMPOUND_TYPE);
+		for (int i = 0; i < journeysNbt.size(); i++) {
+			Journey journey = Journey.fromNbt(journeysNbt.getCompound(i));
+			if (journey != null) {
+				faction.journeys.add(journey);
+			}
+		}
+		faction.nextJourneyId = nbt.getInt("NextJourneyId");
+		if (nbt.contains("Portal")) {
+			faction.portal = BlockPos.fromLong(nbt.getLong("Portal"));
 		}
 		return faction;
 	}

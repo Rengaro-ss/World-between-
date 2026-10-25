@@ -86,7 +86,15 @@ public final class WorldBetweenCommand {
 						.then(CommandManager.argument("faction", StringArgumentType.word())
 								.suggests((context, builder) -> CommandSource.suggestMatching(
 										Arrays.stream(FactionType.values()).map(FactionType::id), builder))
-								.executes(WorldBetweenCommand::arrive))));
+								.executes(context -> arrive(context, false))
+								.then(CommandManager.literal("here").executes(context -> arrive(context, true)))
+								.then(CommandManager.literal("replay").executes(WorldBetweenCommand::replayArrival))))
+				.then(CommandManager.literal("journeys").executes(WorldBetweenCommand::journeys))
+				.then(CommandManager.literal("reputation")
+						.executes(WorldBetweenCommand::reputation)
+						.then(CommandManager.argument("value", IntegerArgumentType.integer(Faction.MIN_REPUTATION, Faction.MAX_REPUTATION))
+								.requires(source -> source.hasPermissionLevel(2))
+								.executes(WorldBetweenCommand::setReputation))));
 	}
 
 	private static int status(CommandContext<ServerCommandSource> context) {
@@ -168,7 +176,62 @@ public final class WorldBetweenCommand {
 		return days;
 	}
 
-	private static int arrive(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+	private static int replayArrival(CommandContext<ServerCommandSource> context) {
+		Faction faction = WorldBetweenState.get(context.getSource().getServer()).faction(FactionType.NERIS);
+		BlockPos portal = com.worldbetween.entity.Arrival.replay(context.getSource().getServer(), faction);
+		if (portal == null) {
+			context.getSource().sendError(Text.translatable("command.worldbetween.arrive.unavailable", FactionType.NERIS.displayName()));
+			return 0;
+		}
+		send(context, Text.translatable("command.worldbetween.arrive.replay", portal.getX(), portal.getY(), portal.getZ()));
+		return 1;
+	}
+
+	private static int journeys(CommandContext<ServerCommandSource> context) {
+		WorldBetweenState state = WorldBetweenState.get(context.getSource().getServer());
+		Faction faction = state.faction(FactionType.NERIS);
+		double now = state.day() + (context.getSource().getServer().getOverworld().getTimeOfDay() % 24000L) / 24000.0;
+		send(context, Text.translatable("command.worldbetween.journeys.header", faction.journeys().size()).formatted(Formatting.GOLD));
+		Vec3d here = context.getSource().getPosition();
+		for (com.worldbetween.faction.journeys.Journey journey : faction.journeys()) {
+			Settlement from = com.worldbetween.faction.journeys.Journeys.settlement(faction, journey.from());
+			Settlement to = com.worldbetween.faction.journeys.Journeys.settlement(faction, journey.to());
+			BlockPos at = journey.position(now);
+			String target = to != null ? to.name() : journey.townName() != null ? journey.townName() : "?";
+			send(context, Text.translatable("command.worldbetween.journeys.line",
+					Text.translatable("journey.worldbetween." + journey.kind().id()), from == null ? "?" : from.name(), target,
+					at.getX(), at.getZ(), (int) Math.sqrt(at.getSquaredDistance(new BlockPos((int) here.x, 0, (int) here.z))),
+					journey.isReturning() ? Text.translatable("command.worldbetween.journeys.returning") : Text.empty())
+					.append(Text.literal(String.format(" [#%d %.0f/%.0f %s→%s]", journey.id(), journey.travelled(now), journey.length(),
+							journey.route().get(0).toShortString(), journey.destination().toShortString()))
+							.formatted(Formatting.DARK_GRAY)));
+		}
+		return faction.journeys().size();
+	}
+
+	private static int reputation(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+		net.minecraft.server.network.ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
+		Faction faction = WorldBetweenState.get(context.getSource().getServer()).faction(FactionType.NERIS);
+		int value = faction.reputation(player.getUuid());
+		send(context, Text.translatable("command.worldbetween.reputation", FactionType.NERIS.displayName(), value,
+				Text.translatable("reputation.worldbetween." + com.worldbetween.town.TownSecurity.standing(faction, player.getUuid()))));
+		return value;
+	}
+
+	private static int setReputation(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+		net.minecraft.server.network.ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
+		WorldBetweenState state = WorldBetweenState.get(context.getSource().getServer());
+		Faction faction = state.faction(FactionType.NERIS);
+		int value = IntegerArgumentType.getInteger(context, "value");
+		faction.changeReputation(player.getUuid(), value - faction.reputation(player.getUuid()));
+		if (value >= 0) {
+			faction.pardon(player.getUuid());
+		}
+		state.markDirty();
+		return reputation(context);
+	}
+
+	private static int arrive(CommandContext<ServerCommandSource> context, boolean here) throws CommandSyntaxException {
 		FactionType type = factionArgument(context);
 		FactionBehavior behavior = FactionBehaviors.get(type);
 		WorldBetweenState state = WorldBetweenState.get(context.getSource().getServer());
@@ -177,7 +240,9 @@ public final class WorldBetweenCommand {
 			context.getSource().sendError(Text.translatable("command.worldbetween.arrive.unavailable", type.displayName()));
 			return 0;
 		}
-		if (!behavior.arrive(new SimulationContext(context.getSource().getServer(), state), faction)) {
+		SimulationContext simulation = new SimulationContext(context.getSource().getServer(), state);
+		BlockPos center = BlockPos.ofFloored(context.getSource().getPosition());
+		if (!(here ? behavior.arriveNear(simulation, faction, center, 140, 200) : behavior.arrive(simulation, faction))) {
 			context.getSource().sendError(Text.translatable("command.worldbetween.arrive.no_site", type.displayName()));
 			return 0;
 		}

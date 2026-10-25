@@ -36,7 +36,17 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
 
+import com.worldbetween.faction.Settlement;
+import com.worldbetween.trade.NerisTrade;
+import net.minecraft.screen.MerchantScreenHandler;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.village.Merchant;
+import net.minecraft.village.TradeOffer;
+import net.minecraft.village.TradeOfferList;
+
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -45,7 +55,7 @@ import java.util.function.Consumer;
  * seeker's journey goes on in the simulation either way, and these are its visible side. So they are
  * never saved; whoever manages them brings them back when a player returns.
  */
-public class NerisEntity extends PathAwareEntity {
+public class NerisEntity extends PathAwareEntity implements Merchant {
 	private static final TrackedData<Integer> ROLE = DataTracker.registerData(NerisEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
 	/** Where the person is headed: a seeker's goal, a guard's quarry. */
@@ -62,6 +72,11 @@ public class NerisEntity extends PathAwareEntity {
 	private Object[] speechArgs = new Object[0];
 	/** Called when the person dies, so the simulation can mourn them. */
 	private Consumer<DamageSource> onDeath;
+	/** Merchants: the town whose stores they sell from, the stranger they are dealing with, and what is on offer. */
+	private int market = -1;
+	private PlayerEntity customer;
+	private TradeOfferList offers = new TradeOfferList();
+	private Map<TradeOffer, NerisTrade.Deal> deals = Map.of();
 
 	public NerisEntity(EntityType<? extends PathAwareEntity> type, World world) {
 		super(type, world);
@@ -108,6 +123,11 @@ public class NerisEntity extends PathAwareEntity {
 			case KING, BARON -> attribute(40, 4, 0.25);
 			default -> attribute(24, 3, 0.3);
 		}
+	}
+
+	/** Walking speed: a caravan keeps to its donkey's pace. */
+	public void setPace(double speed) {
+		getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
 	}
 
 	public void setTool(Item tool) {
@@ -159,6 +179,93 @@ public class NerisEntity extends PathAwareEntity {
 		this.onDeath = onDeath;
 	}
 
+	public String speechKey() {
+		return speechKey;
+	}
+
+	/** Merchants sell from this town's stores. */
+	public void setMarket(int settlement) {
+		this.market = settlement;
+	}
+
+	// ---------------------------------------------------------------- trade
+
+	public void beginTrade(PlayerEntity player, TradeOfferList offers, Map<TradeOffer, NerisTrade.Deal> deals, int market) {
+		this.offers = offers;
+		this.deals = deals;
+		this.market = market;
+		setCustomer(player);
+	}
+
+	@Override
+	public void setCustomer(PlayerEntity customer) {
+		this.customer = customer;
+	}
+
+	@Override
+	public PlayerEntity getCustomer() {
+		return customer;
+	}
+
+	@Override
+	public TradeOfferList getOffers() {
+		return offers;
+	}
+
+	@Override
+	public void setOffersFromServer(TradeOfferList offers) {
+		this.offers = offers;
+	}
+
+	@Override
+	public void trade(TradeOffer offer) {
+		offer.use();
+		NerisTrade.Deal deal = deals.get(offer);
+		if (deal != null && customer instanceof ServerPlayerEntity player && getWorld() instanceof ServerWorld world) {
+			Faction faction = WorldBetweenState.get(world.getServer()).faction(FactionType.NERIS);
+			Settlement town = faction.settlements().stream().filter(s -> s.id() == market).findFirst().orElse(null);
+			if (town != null) {
+				NerisTrade.onTrade(player, faction, town, deal);
+			}
+		}
+	}
+
+	@Override
+	public void onSellingItem(ItemStack stack) {
+	}
+
+	@Override
+	public int getExperience() {
+		return 0;
+	}
+
+	@Override
+	public void setExperienceFromServer(int experience) {
+	}
+
+	@Override
+	public boolean isLeveledMerchant() {
+		return false;
+	}
+
+	@Override
+	public SoundEvent getYesSound() {
+		return SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP;
+	}
+
+	@Override
+	public boolean isClient() {
+		return getWorld().isClient();
+	}
+
+	@Override
+	public void remove(RemovalReason reason) {
+		if (customer instanceof ServerPlayerEntity player && player.currentScreenHandler instanceof MerchantScreenHandler) {
+			player.closeHandledScreen();
+		}
+		super.remove(reason);
+	}
+
 	@Override
 	protected void initGoals() {
 		goalSelector.add(0, new SwimGoal(this));
@@ -192,6 +299,11 @@ public class NerisEntity extends PathAwareEntity {
 		Text name = getCustomName() != null ? getCustomName() : getName();
 		String key = speechKey.isEmpty() ? "speech.worldbetween." + role().id() + "." + random.nextInt(3) : speechKey;
 		Faction faction = WorldBetweenState.get(((ServerWorld) getWorld()).getServer()).faction(FactionType.NERIS);
+		if (role() == NerisRole.MERCHANT && player instanceof ServerPlayerEntity serverPlayer && customer == null && getTarget() == null) {
+			Settlement town = faction.settlements().stream().filter(s -> s.id() == market).findFirst().orElse(null);
+			NerisTrade.open(this, serverPlayer, faction, town);
+			return ActionResult.SUCCESS;
+		}
 		if (role().fights() && faction.isCriminal(player.getUuid())) {
 			key = "speech.worldbetween.criminal";
 		}
@@ -216,6 +328,19 @@ public class NerisEntity extends PathAwareEntity {
 		super.tick();
 		if (!getWorld().isClient() && role() == NerisRole.SEEKER) {
 			climbIfStuck();
+		}
+		if (!getWorld().isClient() && age % 100 == 50 && !NerisPresence.isManaged(getUuid())) {
+			discard(); // nobody stands behind this one any more
+			return;
+		}
+		if (!getWorld().isClient() && customer != null) {
+			// A merchant stands still while dealing, and the deal is off if the customer walks away.
+			if (customer.isRemoved() || squaredDistanceTo(customer) > 64 || !(customer.currentScreenHandler instanceof MerchantScreenHandler)) {
+				setCustomer(null);
+			} else {
+				getNavigation().stop();
+				getLookControl().lookAt(customer);
+			}
 		}
 	}
 

@@ -33,6 +33,22 @@ public class WorldBetweenConfig {
 	public float noticeChancePerSecond = 0.15f;
 	/** Reputation at which a faction lets a player walk its mines freely. */
 	public int friendlyReputation = 30;
+	/** Below this reputation, guards turn a stranger out of the kingdom's towns. */
+	public int townEntryReputation = -20;
+	/** Below this reputation, a stranger may not stay inside a walled town at night. */
+	public int curfewReputation = 10;
+	/** Reputation a baron wants before receiving a stranger in the town hall. */
+	public int hallReputation = 20;
+	/** Reputation the king wants before granting a stranger an audience. */
+	public int throneReputation = 50;
+	/** Time a stranger turned out of a town gets to leave, in seconds. */
+	public int townGraceSeconds = 60;
+	/** Time a stranger caught out after curfew gets to leave, in seconds. */
+	public int curfewGraceSeconds = 90;
+	/** Time an intruder in a hall or a closed building gets to get out, in seconds. */
+	public int intrusionGraceSeconds = 10;
+	/** Below this reputation, merchants will not trade with a stranger. */
+	public int tradeReputation = -20;
 	/** Announce chronicle events to all players in chat. */
 	public boolean broadcastChronicle = true;
 

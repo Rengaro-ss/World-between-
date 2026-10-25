@@ -6,6 +6,8 @@ import com.worldbetween.faction.FactionType;
 import com.worldbetween.faction.Settlement;
 import com.worldbetween.faction.court.Court;
 import com.worldbetween.faction.court.Noble;
+import com.worldbetween.faction.journeys.Journey;
+import com.worldbetween.faction.journeys.Journeys;
 import com.worldbetween.faction.seekers.Seeker;
 import com.worldbetween.faction.seekers.Seekers;
 import com.worldbetween.mine.MineManager;
@@ -17,6 +19,8 @@ import com.worldbetween.town.TownLayout;
 import com.worldbetween.world.WorldBetweenState;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.passive.DonkeyEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -36,6 +40,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import com.worldbetween.faction.neris.NerisNames;
+import net.minecraft.util.math.random.Random;
 
 /**
  * Brings the people of Neris into the world around players: seekers on their journeys, the townsfolk
@@ -70,6 +77,10 @@ public final class NerisPresence {
 		}
 		double now = state.day() + (world.getTimeOfDay() % 24000L) / 24000.0;
 		seekers(world, faction, now);
+		journeys(world, faction, now);
+		if (SLOTS.keySet().stream().anyMatch(k -> k.startsWith("journey:") || k.startsWith("seeker:"))) {
+			state.markDirty(); // progress made on the road in person is kept
+		}
 		for (Settlement settlement : faction.settlements()) {
 			if (settlement.dimension() == World.OVERWORLD) {
 				town(world, faction, settlement);
@@ -86,7 +97,7 @@ public final class NerisPresence {
 			String slot = "seeker:" + seeker.id();
 			NerisEntity entity = entity(world, slot);
 			// Only a couple of the seekers resting at home show on the square at a time.
-			boolean idle = seeker.isIdle() && resting++ >= 2;
+			boolean idle = seeker.isIdle() && (resting++ >= 2 || Arrival.isPlaying(seeker.home()));
 			if (!seeker.isAlive() || idle) {
 				discard(world, slot);
 				continue;
@@ -165,7 +176,7 @@ public final class NerisPresence {
 		String prefix = settlement.key(faction.type()) + "/";
 		BlockPos center = settlement.pos();
 		PlayerEntity near = nearestPlayer(world, center, TOWN_MEET);
-		if (near == null) {
+		if (near == null || Arrival.isPlaying(settlement.id())) {
 			if (nearestPlayer(world, center, TOWN_LEAVE) == null) {
 				SLOTS.keySet().stream().filter(k -> k.startsWith(prefix)).toList().forEach(k -> discard(world, k));
 			}
@@ -198,11 +209,15 @@ public final class NerisPresence {
 			Map<BuildingType, Integer> used = new HashMap<>();
 			int workers = 0;
 			for (TownFeatures.Feature feature : TownFeatures.of(world, faction, settlement)) {
-				if (!feature.isStructure() || feature.type() == null || workers >= MAX_WORKERS) {
+				if (!feature.isStructure() || feature.type() == null) {
 					continue;
 				}
 				BuildingType type = feature.type();
-				int crews = settlement.staffed().getOrDefault(type, settlement.buildingCount(type));
+				// Merchants keep the market stalls whatever else is going on; the other crews are capped.
+				if (type != BuildingType.MARKET && workers >= MAX_WORKERS) {
+					continue;
+				}
+				int crews = type == BuildingType.MARKET ? 2 + settlement.tier() : settlement.staffed().getOrDefault(type, settlement.buildingCount(type));
 				if (used.merge(type, 1, Integer::sum) > crews || type == BuildingType.HOUSE) {
 					continue;
 				}
@@ -212,11 +227,17 @@ public final class NerisPresence {
 				}
 				Canvas.WorkSpot spot = spots.get(0);
 				Item tool = toolFor(spot.work());
-				workers++;
-				wanted.put(prefix + "work:" + feature.key(), new Spawner(NerisRole.WORKER, spot.pos(), 0, entity -> {
+				boolean merchant = type == BuildingType.MARKET;
+				if (!merchant) {
+					workers++;
+				}
+				wanted.put(prefix + "work:" + feature.key(), new Spawner(merchant ? NerisRole.MERCHANT : NerisRole.WORKER, spot.pos(), 0, entity -> {
 					entity.setWorkSpot(spot.pos());
 					entity.setAnchor(spot.pos(), 2);
-					if (tool != null) {
+					if (merchant) {
+						entity.setMarket(settlement.id());
+						entity.setCustomName(Text.translatable("entity.worldbetween.merchant_named", NerisNames.person(Random.create(feature.key().hashCode() * 0x9E3779B97F4A7C15L))));
+					} else if (tool != null) {
 						entity.setTool(tool);
 					}
 				}));
@@ -232,11 +253,22 @@ public final class NerisPresence {
 
 		// Guards at the watchtowers, and on the square of a bigger town.
 		List<BlockPos> towers = layout.towerSpots(settlement.tier());
-		int towerGuards = Math.min(4, Math.min(towers.size(), settlement.buildingCount(BuildingType.WATCHTOWER)));
+		// Guards out on patrol are not at their posts.
+		int towerGuards = Math.max(0, Math.min(4, Math.min(towers.size(), settlement.buildingCount(BuildingType.WATCHTOWER)))
+				- Journeys.away(faction, settlement.id(), Journey.Kind.PATROL));
 		for (int i = 0; i < towerGuards; i++) {
 			BlockPos tower = towers.get(i);
 			BlockPos post = tower.withY(world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, tower.getX(), tower.getZ() - 2));
 			wanted.put(prefix + "guard:" + i, new Spawner(NerisRole.GUARD, post.north(2), 3, entity -> entity.setAnchor(post.north(2), 3)));
+		}
+		// Guards at the hall door, who decide who goes in.
+		TownLayout.Hall door = layout.hall(settlement.tier(), settlement.isCapital());
+		for (int i = 0; i < (settlement.tier() == 0 ? 1 : 2); i++) {
+			BlockPos post = door.outside((i == 0 ? -1 : 1) * (door.doorHalf() + 1), 1);
+			wanted.put(prefix + "door:" + i, new Spawner(NerisRole.GUARD, post, 0, entity -> {
+				entity.setAnchor(post, 0);
+				entity.setSpeech("speech.worldbetween.guard.post");
+			}));
 		}
 		if (settlement.tier() >= 2) {
 			for (int i = 0; i < 2; i++) {
@@ -275,15 +307,11 @@ public final class NerisPresence {
 
 	/** Where the town's nobles receive visitors: the throne in the capital's hall, else the hall floor. */
 	private static BlockPos hallSpot(TownLayout layout, Settlement settlement, boolean kingHere) {
-		int tier = settlement.tier();
-		boolean throne = settlement.isCapital() && tier >= 3;
-		int depth = Blueprints.townHallDepth(tier, throne);
-		BlockPos hallCenter = layout.center().offset(layout.hallSide(), TownLayout.plazaHalf(tier) + 1 + (depth + 1) / 2);
-		Canvas.Local local = new Canvas().at(hallCenter, layout.hallSide().getOpposite());
-		if (throne && kingHere) {
-			return local.world(0, 3, 6);
+		TownLayout.Hall hall = layout.hall(settlement.tier(), settlement.isCapital());
+		if (hall.throne() && kingHere) {
+			return hall.local().world(0, 3, 6);
 		}
-		return local.world(0, 1, Math.max(0, depth / 2 - 2));
+		return hall.local().world(0, 1, Math.max(0, hall.halfDepth() - 2));
 	}
 
 	private static Item toolFor(Canvas.Work work) {
@@ -368,15 +396,213 @@ public final class NerisPresence {
 					WARNED.add(id);
 					player.sendMessage(Text.empty().append(Text.translatable("entity.worldbetween.guard").formatted(Formatting.GOLD))
 							.append(Text.literal(": ").formatted(Formatting.GRAY))
-							.append(Text.translatable("speech.worldbetween.guard.mine")), false);
+							.append(Text.translatable(guard.speechKey().isEmpty() ? "speech.worldbetween.guard.mine" : guard.speechKey())), false);
 				}
 			}
 		}
 	}
 
+	// ---------------------------------------------------------------- town guards
+
+	/** Two guards sent after a stranger in a town, from a watch post or the hall door. */
+	public static List<UUID> dispatchGuards(ServerWorld world, BlockPos from, ServerPlayerEntity player, String speech) {
+		List<UUID> guards = new ArrayList<>();
+		for (int i = 0; i < 2; i++) {
+			String slot = "townguard:" + player.getUuid() + ":" + i;
+			BlockPos at = standable(world, from, 2);
+			NerisEntity guard = spawn(world, slot, NerisRole.GUARD, at == null ? from : at);
+			if (guard != null) {
+				guard.setQuarry(player.getUuid());
+				guard.setSpeech(speech);
+				guards.add(guard.getUuid());
+				WARNED.remove(guard.getUuid());
+			}
+		}
+		return guards;
+	}
+
+	/** The guards standing at a town's hall door right now. */
+	public static List<NerisEntity> doorGuards(ServerWorld world, Faction faction, Settlement settlement) {
+		String prefix = settlement.key(faction.type()) + "/door:";
+		List<NerisEntity> guards = new ArrayList<>();
+		for (int i = 0; i < 2; i++) {
+			NerisEntity guard = entity(world, prefix + i);
+			if (guard != null) {
+				guards.add(guard);
+			}
+		}
+		return guards;
+	}
+
+	/** A noble in person, if they are out in their hall right now. */
+	public static NerisEntity noble(ServerWorld world, Faction faction, Settlement settlement, Noble noble) {
+		return noble == null ? null : entity(world, settlement.key(faction.type()) + "/noble:" + noble.id());
+	}
+
+	// ---------------------------------------------------------------- journeys
+
+	private static final String TRANSIENT = "worldbetween.transient";
+	private static final Map<String, UUID> ANIMALS = new HashMap<>();
+
+	/** Patrols, caravans and settlers, met wherever they have got to on the road. */
+	private static void journeys(ServerWorld world, Faction faction, double now) {
+		Set<String> active = new HashSet<>();
+		for (Journey journey : List.copyOf(faction.journeys())) {
+			String prefix = "journey:" + journey.id() + ":";
+			active.add(prefix);
+			int size = journey.kind().people();
+			List<NerisEntity> members = new ArrayList<>();
+			for (int i = 0; i < size; i++) {
+				NerisEntity member = entity(world, prefix + i);
+				if (member != null) {
+					members.add(member);
+				}
+			}
+			if (!members.isEmpty()) {
+				NerisEntity leader = members.get(0);
+				if (world.getClosestPlayer(leader, SEEKER_LEAVE) == null) {
+					journey.resumeFrom(leader.getBlockPos(), now);
+					discardGroup(world, prefix, size);
+					continue;
+				}
+				lead(world, faction, journey, prefix, size, members, now);
+				continue;
+			}
+			BlockPos at = journey.position(now);
+			if (!world.isChunkLoaded(at) || nearestPlayer(world, at, SEEKER_MEET) == null) {
+				continue;
+			}
+			spawnGroup(world, faction, journey, prefix, now);
+		}
+		// Groups whose journey ended while someone watched: they have gone in, or settled.
+		for (String slot : List.copyOf(SLOTS.keySet())) {
+			if (slot.startsWith("journey:") && !active.contains(slot.substring(0, slot.lastIndexOf(':') + 1))) {
+				discard(world, slot);
+			}
+		}
+		for (String key : List.copyOf(ANIMALS.keySet())) {
+			if (!active.contains(key)) {
+				discardAnimal(world, key);
+			}
+		}
+	}
+
+	private static void spawnGroup(ServerWorld world, Faction faction, Journey journey, String prefix, double now) {
+		double travelled = journey.travelled(now);
+		Settlement home = Journeys.settlement(faction, journey.from());
+		for (int i = 0; i < journey.kind().people(); i++) {
+			BlockPos p = journey.at(Math.max(0, travelled - 2.5 * i));
+			BlockPos at = new BlockPos(p.getX(), world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()), p.getZ());
+			NerisRole role = switch (journey.kind()) {
+				case PATROL -> NerisRole.GUARD;
+				case CARAVAN -> i == 0 ? NerisRole.MERCHANT : i == 1 ? NerisRole.WORKER : NerisRole.GUARD;
+				case SETTLERS -> i % 3 == 0 ? NerisRole.WORKER : NerisRole.CITIZEN;
+			};
+			NerisEntity member = spawn(world, prefix + i, role, at);
+			if (member == null) {
+				continue;
+			}
+			member.setSpeech("speech.worldbetween.journey." + journey.kind().id() + (role == NerisRole.GUARD ? ".guard" : ""));
+			member.setPace(journey.kind() == Journey.Kind.CARAVAN ? 0.2 : journey.kind() == Journey.Kind.SETTLERS ? 0.24 : 0.27);
+			if (role == NerisRole.MERCHANT && home != null) {
+				member.setMarket(home.id());
+				member.setCustomName(Text.translatable("entity.worldbetween.merchant_named", NerisNames.person(Random.create((journey.id() + 1) * 0x9E3779B97F4A7C15L))));
+			}
+			if (role == NerisRole.WORKER) {
+				member.setTool(journey.kind() == Journey.Kind.SETTLERS ? Items.IRON_AXE : Items.LEAD);
+			}
+			String slot = prefix + i;
+			member.setOnDeath(source -> {
+				ServerPlayerEntity killer = NerisEntity.killer(source);
+				if (killer != null) {
+					faction.changeReputation(killer.getUuid(), -10);
+					faction.declareCriminal(killer.getUuid(), WorldBetweenState.get(world.getServer()).day());
+					if (home != null) {
+						home.setPopulation(home.population() - 1);
+					}
+				}
+				SLOTS.remove(slot);
+			});
+			if (journey.kind() == Journey.Kind.CARAVAN && i == 1) {
+				packAnimal(world, prefix, member);
+			}
+		}
+	}
+
+	/** Keeps a group on its road: they all make for a point a little way ahead of the leader. */
+	private static void lead(ServerWorld world, Faction faction, Journey journey, String prefix, int size, List<NerisEntity> members, double now) {
+		NerisEntity leader = members.get(0);
+		journey.resumeFrom(leader.getBlockPos(), now);
+		if (journey.hasArrived(now) || leader.getBlockPos().withY(0).getSquaredDistance(journey.destination().withY(0)) < 16) {
+			Journeys.arrive(world.getServer(), faction, journey, now);
+			if (!faction.journeys().contains(journey)) {
+				discardGroup(world, prefix, size);
+				return;
+			}
+		}
+		BlockPos next = journey.at(journey.travelled(now) + 14);
+		BlockPos ahead = new BlockPos(next.getX(), world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, next.getX(), next.getZ()), next.getZ());
+		for (NerisEntity member : members) {
+			member.setDestination(ahead);
+		}
+		UUID animal = ANIMALS.get(prefix);
+		if (animal != null && world.getEntity(animal) instanceof DonkeyEntity donkey && members.size() > 1) {
+			NerisEntity carter = entity(world, prefix + 1);
+			if (carter != null) {
+				double distance = donkey.squaredDistanceTo(carter);
+				if (distance > 144) {
+					donkey.refreshPositionAndAngles(carter.getX(), carter.getY(), carter.getZ(), donkey.getYaw(), 0);
+				} else if (distance > 9) {
+					donkey.getNavigation().startMovingTo(carter, 1.6);
+				}
+				if (!donkey.isLeashed()) {
+					donkey.attachLeash(carter, true);
+				}
+			}
+		}
+	}
+
+	/** The caravan's donkey, led by the carter. It never outlives the encounter. */
+	private static void packAnimal(ServerWorld world, String prefix, NerisEntity carter) {
+		DonkeyEntity donkey = EntityType.DONKEY.create(world);
+		if (donkey == null) {
+			return;
+		}
+		donkey.refreshPositionAndAngles(carter.getX() - 1, carter.getY(), carter.getZ() - 1, carter.getYaw(), 0);
+		donkey.setHasChest(true);
+		donkey.setPersistent();
+		world.spawnEntity(donkey);
+		// Tagged only once it is in the world, so a copy that was ever saved is dropped when it loads.
+		donkey.addCommandTag(TRANSIENT);
+		donkey.attachLeash(carter, true);
+		ANIMALS.put(prefix, donkey.getUuid());
+	}
+
+	/** Drops any pack animal left over from an earlier session as soon as it is loaded. */
+	public static void onEntityLoad(Entity entity) {
+		if (entity.getCommandTags().contains(TRANSIENT) && !ANIMALS.containsValue(entity.getUuid())) {
+			entity.discard();
+		}
+	}
+
+	private static void discardGroup(ServerWorld world, String prefix, int size) {
+		for (int i = 0; i < size; i++) {
+			discard(world, prefix + i);
+		}
+		discardAnimal(world, prefix);
+	}
+
+	private static void discardAnimal(ServerWorld world, String prefix) {
+		UUID id = ANIMALS.remove(prefix);
+		if (id != null && world.getEntity(id) instanceof DonkeyEntity donkey) {
+			donkey.detachLeash(true, false);
+			donkey.discard();
+		}
+	}
+
 	// ---------------------------------------------------------------- helpers
 
-	private static NerisEntity entity(ServerWorld world, String slot) {
+	static NerisEntity entity(ServerWorld world, String slot) {
 		UUID id = SLOTS.get(slot);
 		if (id == null) {
 			return null;
@@ -389,7 +615,7 @@ public final class NerisPresence {
 		return null;
 	}
 
-	private static void discard(ServerWorld world, String slot) {
+	static void discard(ServerWorld world, String slot) {
 		UUID id = SLOTS.remove(slot);
 		if (id != null) {
 			Entity entity = world.getEntity(id);
@@ -399,7 +625,11 @@ public final class NerisPresence {
 		}
 	}
 
-	private static NerisEntity spawn(ServerWorld world, String slot, NerisRole role, BlockPos at) {
+	static NerisEntity spawn(ServerWorld world, String slot, NerisRole role, BlockPos at) {
+		// Only where entities are already up and running: one added to a chunk still loading is lost track of.
+		if (!world.shouldTickEntity(at)) {
+			return null;
+		}
 		NerisEntity entity = WorldBetweenEntities.NERIS.create(world);
 		if (entity == null) {
 			return null;
@@ -464,6 +694,11 @@ public final class NerisPresence {
 			}
 		}
 		return best;
+	}
+
+	/** Whether someone is still standing in for something; anyone who is not has no business being out. */
+	public static boolean isManaged(UUID id) {
+		return SLOTS.containsValue(id) || LINGERING.containsKey(id);
 	}
 
 	/** Used by the test harness: who is out right now. */

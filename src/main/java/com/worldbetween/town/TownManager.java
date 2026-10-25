@@ -113,6 +113,8 @@ public final class TownManager {
 			BlockPos pos = entry.getKey();
 			Canvas.Placement placement = entry.getValue();
 			if (placement.mode() == Canvas.Mode.SET && area.contains(pos) && world.getBlockState(pos).equals(placement.state())) {
+				// The kingdom takes its goods along: nothing spills for a passer-by to be blamed for.
+				net.minecraft.util.Clearable.clear(world.getBlockEntity(pos));
 				world.setBlockState(pos, Blocks.AIR.getDefaultState(), FLAGS);
 				changed++;
 			}

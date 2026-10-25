@@ -18,12 +18,18 @@ public final class Ownership {
 			.codec(FactionType.CODEC)
 			.packetCodec(PacketCodecs.STRING.xmap(FactionType::byId, FactionType::id))
 			.build();
+	/** Goods a faction sold fair and square: they show where they came from, but nobody calls them stolen. */
+	public static final ComponentType<FactionType> BOUGHT = ComponentType.<FactionType>builder()
+			.codec(FactionType.CODEC)
+			.packetCodec(PacketCodecs.STRING.xmap(FactionType::byId, FactionType::id))
+			.build();
 
 	private Ownership() {
 	}
 
 	public static void register() {
 		Registry.register(Registries.DATA_COMPONENT_TYPE, Identifier.of(WorldBetween.MOD_ID, "owner"), OWNER);
+		Registry.register(Registries.DATA_COMPONENT_TYPE, Identifier.of(WorldBetween.MOD_ID, "bought"), BOUGHT);
 	}
 
 	/**
@@ -35,6 +41,17 @@ public final class Ownership {
 			stack.set(OWNER, owner);
 		}
 		return stack;
+	}
+
+	public static ItemStack markBought(ItemStack stack, FactionType seller) {
+		if (!stack.isEmpty() && !stack.isOf(net.minecraft.item.Items.IRON_NUGGET)) {
+			stack.set(BOUGHT, seller);
+		}
+		return stack;
+	}
+
+	public static FactionType sellerOf(ItemStack stack) {
+		return stack.get(BOUGHT);
 	}
 
 	public static FactionType ownerOf(ItemStack stack) {

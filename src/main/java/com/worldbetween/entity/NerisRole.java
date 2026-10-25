@@ -9,7 +9,8 @@ public enum NerisRole {
 	GUARD("guard"),
 	SEEKER("seeker"),
 	BARON("baron"),
-	KING("king");
+	KING("king"),
+	MERCHANT("merchant");
 
 	private final String id;
 

@@ -77,8 +77,13 @@ public class NerisBehavior implements FactionBehavior {
 	@Override
 	public boolean arrive(SimulationContext context, Faction faction) {
 		ServerWorld overworld = context.server().getOverworld();
-		BlockPos site = LocationFinder.findSite(context, overworld, FactionType.NERIS, overworld.getSpawnPos(),
-				context.config().minArrivalDistance, context.config().maxArrivalDistance);
+		return arriveNear(context, faction, overworld.getSpawnPos(), context.config().minArrivalDistance, context.config().maxArrivalDistance);
+	}
+
+	@Override
+	public boolean arriveNear(SimulationContext context, Faction faction, BlockPos center, int minDistance, int maxDistance) {
+		ServerWorld overworld = context.server().getOverworld();
+		BlockPos site = LocationFinder.findSite(context, overworld, FactionType.NERIS, center, minDistance, maxDistance);
 		if (site == null) {
 			return false;
 		}
@@ -92,6 +97,7 @@ public class NerisBehavior implements FactionBehavior {
 				camp.name(), site.getX(), site.getZ());
 		Court.crownFounder(context, faction, camp);
 		Seekers.foundParty(context, faction, camp);
+		com.worldbetween.entity.Arrival.begin(context.server(), faction, camp);
 		return true;
 	}
 
@@ -112,6 +118,7 @@ public class NerisBehavior implements FactionBehavior {
 		expand(context, faction);
 		Court.simulateDay(context, faction);
 		Seekers.simulateDay(context, faction);
+		com.worldbetween.faction.journeys.Journeys.simulateDay(context, faction);
 	}
 
 	private void work(SimulationContext context, Faction faction, Settlement settlement) {
@@ -521,7 +528,8 @@ public class NerisBehavior implements FactionBehavior {
 		BlockPos site = null;
 		for (BlockPos known : List.copyOf(faction.knownSites())) {
 			Settlement nearest = parents.stream().min(Comparator.comparingDouble(p -> p.pos().getSquaredDistance(known))).orElse(null);
-			boolean clear = faction.settlements().stream().allMatch(s -> s.pos().getSquaredDistance(known) > 200 * 200);
+			boolean clear = faction.settlements().stream().allMatch(s -> s.pos().getSquaredDistance(known) > 200 * 200)
+					&& !com.worldbetween.faction.journeys.Journeys.settlersBound(faction, known, 200);
 			if (nearest != null && clear && nearest.pos().getSquaredDistance(known) < 600 * 600) {
 				parent = nearest;
 				site = known;
@@ -550,15 +558,32 @@ public class NerisBehavior implements FactionBehavior {
 		long carried = faction.takeResource(FOOD, 30);
 		faction.takeResource(GRAIN, 30 - carried);
 		parent.setPopulation(parent.population() - EXPANSION_SETTLERS);
-		Settlement settlement = found(context, faction, site, World.OVERWORLD, EXPANSION_SETTLERS, parent.id());
+		// The settlers walk there; the town is founded when they arrive.
+		String name = NerisNames.generate(context.random());
+		com.worldbetween.faction.journeys.Journeys.sendSettlers(overworld, faction, parent, site, name, context.day());
 		faction.setLastExpansionDay(context.day());
-		context.chronicle(FactionType.NERIS, "chronicle.worldbetween.neris.expansion",
-				parent.name(), settlement.name(), site.getX(), site.getZ());
+		context.chronicle(FactionType.NERIS, "chronicle.worldbetween.neris.settlers_leave",
+				parent.name(), name, site.getX(), site.getZ());
 	}
 
-	private Settlement found(SimulationContext context, Faction faction, BlockPos pos, RegistryKey<World> dimension,
+	/** Settlers have reached their site: the new town is founded. */
+	public static void settle(SimulationContext context, Faction faction, com.worldbetween.faction.journeys.Journey journey) {
+		Settlement parent = faction.settlements().stream().filter(s -> s.id() == journey.from()).findFirst().orElse(null);
+		BlockPos site = journey.destination();
+		Settlement settlement = found(context, faction, site, World.OVERWORLD, EXPANSION_SETTLERS,
+				parent == null ? -1 : parent.id(), journey.townName());
+		context.chronicle(FactionType.NERIS, "chronicle.worldbetween.neris.expansion",
+				parent == null ? "?" : parent.name(), settlement.name(), site.getX(), site.getZ());
+	}
+
+	private static Settlement found(SimulationContext context, Faction faction, BlockPos pos, RegistryKey<World> dimension,
 			int population, int parentId) {
-		Settlement settlement = new Settlement(faction.nextSettlementId(), NerisNames.generate(context.random()),
+		return found(context, faction, pos, dimension, population, parentId, NerisNames.generate(context.random()));
+	}
+
+	private static Settlement found(SimulationContext context, Faction faction, BlockPos pos, RegistryKey<World> dimension,
+			int population, int parentId, String name) {
+		Settlement settlement = new Settlement(faction.nextSettlementId(), name == null ? NerisNames.generate(context.random()) : name,
 				pos, dimension, context.day());
 		settlement.setPopulation(population);
 		settlement.setParentId(parentId);
