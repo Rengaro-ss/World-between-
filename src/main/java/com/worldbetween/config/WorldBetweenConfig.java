@@ -23,6 +23,8 @@ public class WorldBetweenConfig {
 	public int kamentArrivalDay = 7;
 	/** How many holds the Kaments wake in at once. */
 	public int kamentAwakeningSites = 3;
+	/** The night the first Arki comet falls, at the earliest; never before the Kaments have woken. */
+	public int arkiArrivalDay = 5;
 	/** Arrival points are picked in a ring around world spawn, in blocks. */
 	public int minArrivalDistance = 400;
 	public int maxArrivalDistance = 900;

@@ -47,6 +47,8 @@ public class WorldBetween implements ModInitializer {
 		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.kament.KamentPresence::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.kament.KamentSecurity::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.kament.KamentAwakening::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.arki.ArkiPresence::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.arki.ArkiSky::onServerTick);
 		net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AFTER_DEATH.register(com.worldbetween.town.TownSecurity::onKill);
 		net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.register((entity, world) ->
 				com.worldbetween.entity.NerisPresence.onEntityLoad(entity));

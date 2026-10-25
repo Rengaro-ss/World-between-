@@ -91,6 +91,17 @@ public final class WorldBetweenCommand {
 								.then(CommandManager.literal("replay").executes(WorldBetweenCommand::replayArrival))))
 				.then(CommandManager.literal("journeys").executes(WorldBetweenCommand::journeys))
 				.then(CommandManager.literal("hold").executes(WorldBetweenCommand::hold))
+				.then(CommandManager.literal("colony").executes(WorldBetweenCommand::colony))
+				.then(CommandManager.literal("comet")
+						.requires(source -> source.hasPermissionLevel(2))
+						.executes(context -> {
+							if (!com.worldbetween.entity.arki.ArkiSky.fireNow(context.getSource().getServer(),
+									BlockPos.ofFloored(context.getSource().getPosition()))) {
+								context.getSource().sendError(Text.translatable("command.worldbetween.comet.none"));
+								return 0;
+							}
+							return 1;
+						}))
 				.then(CommandManager.literal("council").executes(WorldBetweenCommand::council))
 				.then(CommandManager.literal("quake")
 						.requires(source -> source.hasPermissionLevel(2))
@@ -161,6 +172,12 @@ public final class WorldBetweenCommand {
 				buildings.append(Text.literal("· sculptors " + settlement.counter("sculptors") + ", soul " + settlement.counter("soul")
 						+ (com.worldbetween.faction.kament.Kaments.isDeep(settlement) ? ", deep" : "")).formatted(Formatting.DARK_GRAY));
 			}
+			if (type == FactionType.ARKI) {
+				com.worldbetween.faction.arki.Arkis.halls(settlement).forEach((hall, count) ->
+						buildings.append(hall.displayName()).append(" ×" + count + "  "));
+				buildings.append(Text.literal("· " + (com.worldbetween.faction.arki.Arkis.isSky(settlement) ? "sky" : "sea")
+						+ ", starlight " + settlement.counter("starlight")).formatted(Formatting.DARK_GRAY));
+			}
 			for (Map.Entry<BuildingType, Integer> entry : settlement.buildings().entrySet()) {
 				buildings.append(entry.getKey().displayName()).append(" ×" + entry.getValue() + "  ");
 			}
@@ -227,6 +244,33 @@ public final class WorldBetweenCommand {
 		if (nearest.counter("carving") > 0) {
 			send(context, Text.translatable("command.worldbetween.hold.carving", nearest.counter("carving")));
 		}
+		return 1;
+	}
+
+	private static int colony(CommandContext<ServerCommandSource> context) {
+		Vec3d from = context.getSource().getPosition();
+		Faction faction = WorldBetweenState.get(context.getSource().getServer()).faction(FactionType.ARKI);
+		ServerWorld world = context.getSource().getServer().getOverworld();
+		send(context, Text.translatable("command.worldbetween.colony.comets", faction.comets().size()).formatted(Formatting.LIGHT_PURPLE));
+		for (com.worldbetween.faction.arki.Comet comet : faction.comets()) {
+			send(context, Text.literal(" ▪ " + comet.kind().name().toLowerCase() + " → " + comet.target().toShortString()).formatted(Formatting.DARK_GRAY));
+		}
+		Settlement nearest = faction.settlements().stream()
+				.min(Comparator.comparingDouble(s -> com.worldbetween.colony.ColonyLayout.origin(world, s).getSquaredDistance(from)))
+				.orElse(null);
+		if (nearest == null) {
+			return 0;
+		}
+		BlockPos origin = com.worldbetween.colony.ColonyLayout.origin(world, nearest);
+		send(context, Text.literal(nearest.name()).formatted(Formatting.LIGHT_PURPLE).append(" ")
+				.append(Text.translatable("tier.worldbetween.arki." + nearest.tier()))
+				.append(Text.translatable("command.worldbetween.colony.summary", nearest.population(),
+						com.worldbetween.faction.arki.Arkis.housing(nearest), origin.getX(), origin.getY(), origin.getZ(),
+						nearest.counter("amethyst"), nearest.counter("sea"), nearest.counter("starlight"), nearest.counter("lore"))));
+		MutableText halls = Text.translatable("command.worldbetween.hold.halls");
+		com.worldbetween.faction.arki.Arkis.halls(nearest).forEach((hall, count) ->
+				halls.append(Text.literal(" ▪ ").append(hall.displayName()).append(" ×" + count)));
+		send(context, halls);
 		return 1;
 	}
 

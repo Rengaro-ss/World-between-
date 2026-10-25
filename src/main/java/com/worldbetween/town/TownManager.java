@@ -65,9 +65,11 @@ public final class TownManager {
 				if (settlement.dimension() != World.OVERWORLD) {
 					continue;
 				}
-				List<TownFeatures.Feature> features = faction.type() == com.worldbetween.faction.FactionType.KAMENT
-						? com.worldbetween.hold.HoldFeatures.of(world, faction, settlement)
-						: TownFeatures.of(world, faction, settlement);
+				List<TownFeatures.Feature> features = switch (faction.type()) {
+					case KAMENT -> com.worldbetween.hold.HoldFeatures.of(world, faction, settlement);
+					case ARKI -> com.worldbetween.colony.ColonyFeatures.of(world, faction, settlement);
+					default -> TownFeatures.of(world, faction, settlement);
+				};
 				for (TownFeatures.Feature feature : features) {
 					if (budget[0] <= 0 || System.nanoTime() > deadline) {
 						return;

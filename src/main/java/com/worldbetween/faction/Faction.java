@@ -65,6 +65,7 @@ public class Faction {
 	private final Map<String, Long> counters = new HashMap<>();
 	private final List<com.worldbetween.faction.kament.Ancient> ancients = new ArrayList<>();
 	private final List<com.worldbetween.faction.kament.Tunnel> tunnels = new ArrayList<>();
+	private final List<com.worldbetween.faction.arki.Comet> comets = new ArrayList<>();
 
 	public Faction(FactionType type) {
 		this.type = type;
@@ -275,6 +276,11 @@ public class Faction {
 		return tunnels;
 	}
 
+	/** Comets and capsules decided on but not yet come down. */
+	public List<com.worldbetween.faction.arki.Comet> comets() {
+		return comets;
+	}
+
 	public boolean isCriminal(UUID player) {
 		return criminals.containsKey(player);
 	}
@@ -370,6 +376,9 @@ public class Faction {
 		NbtList tunnelsNbt = new NbtList();
 		tunnels.forEach(tunnel -> tunnelsNbt.add(tunnel.toNbt()));
 		nbt.put("Tunnels", tunnelsNbt);
+		NbtList cometsNbt = new NbtList();
+		comets.forEach(comet -> cometsNbt.add(comet.toNbt()));
+		nbt.put("Comets", cometsNbt);
 		return nbt;
 	}
 
@@ -486,6 +495,13 @@ public class Faction {
 			com.worldbetween.faction.kament.Tunnel tunnel = com.worldbetween.faction.kament.Tunnel.fromNbt(tunnelsNbt.getCompound(i));
 			if (tunnel != null) {
 				faction.tunnels.add(tunnel);
+			}
+		}
+		NbtList cometsNbt = nbt.getList("Comets", NbtElement.COMPOUND_TYPE);
+		for (int i = 0; i < cometsNbt.size(); i++) {
+			com.worldbetween.faction.arki.Comet comet = com.worldbetween.faction.arki.Comet.fromNbt(cometsNbt.getCompound(i));
+			if (comet != null) {
+				faction.comets.add(comet);
 			}
 		}
 		return faction;
