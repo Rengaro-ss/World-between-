@@ -24,6 +24,7 @@ public class Settlement {
 	private final EnumMap<BuildingType, Integer> buildings = new EnumMap<>(BuildingType.class);
 	private BuildingType project;
 	private int projectProgress;
+	private Mine mine;
 
 	public Settlement(int id, String name, BlockPos pos, RegistryKey<World> dimension, long foundedDay) {
 		this.id = id;
@@ -113,6 +114,20 @@ public class Settlement {
 		return false;
 	}
 
+	/** The settlement's mine, or null until its first mine is built. */
+	public Mine mine() {
+		return mine;
+	}
+
+	public void setMine(Mine mine) {
+		this.mine = mine;
+	}
+
+	/** Key that identifies this settlement across the mod, e.g. in chunk data. */
+	public String key(FactionType faction) {
+		return faction.id() + ":" + id;
+	}
+
 	public NbtCompound toNbt() {
 		NbtCompound nbt = new NbtCompound();
 		nbt.putInt("Id", id);
@@ -128,6 +143,9 @@ public class Settlement {
 		if (project != null) {
 			nbt.putString("Project", project.id());
 			nbt.putInt("ProjectProgress", projectProgress);
+		}
+		if (mine != null) {
+			nbt.put("Mine", mine.toNbt());
 		}
 		return nbt;
 	}
@@ -151,6 +169,9 @@ public class Settlement {
 		if (nbt.contains("Project")) {
 			settlement.project = BuildingType.byId(nbt.getString("Project"));
 			settlement.projectProgress = nbt.getInt("ProjectProgress");
+		}
+		if (nbt.contains("Mine")) {
+			settlement.mine = Mine.fromNbt(nbt.getCompound("Mine"));
 		}
 		return settlement;
 	}

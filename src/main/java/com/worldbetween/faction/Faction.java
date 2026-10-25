@@ -36,6 +36,8 @@ public class Faction {
 	private final Map<UUID, Integer> reputation = new HashMap<>();
 	/** Day each named event last happened, used to keep the chronicle from repeating itself. */
 	private final Map<String, Long> lastEventDays = new HashMap<>();
+	/** Players declared criminals, mapped to the day it happened. */
+	private final Map<UUID, Long> criminals = new HashMap<>();
 
 	public Faction(FactionType type) {
 		this.type = type;
@@ -150,6 +152,18 @@ public class Faction {
 		reputation.put(player, MathHelper.clamp(reputation(player) + delta, MIN_REPUTATION, MAX_REPUTATION));
 	}
 
+	public boolean isCriminal(UUID player) {
+		return criminals.containsKey(player);
+	}
+
+	public void declareCriminal(UUID player, long day) {
+		criminals.putIfAbsent(player, day);
+	}
+
+	public void pardon(UUID player) {
+		criminals.remove(player);
+	}
+
 	/** Returns true and records the day if the event has not happened within {@code cooldown} days. */
 	public boolean tryEvent(String event, long day, long cooldown) {
 		Long last = lastEventDays.get(event);
@@ -193,6 +207,10 @@ public class Faction {
 		NbtCompound eventsNbt = new NbtCompound();
 		lastEventDays.forEach(eventsNbt::putLong);
 		nbt.put("Events", eventsNbt);
+
+		NbtCompound criminalsNbt = new NbtCompound();
+		criminals.forEach((player, day) -> criminalsNbt.putLong(player.toString(), day));
+		nbt.put("Criminals", criminalsNbt);
 		return nbt;
 	}
 
@@ -239,6 +257,15 @@ public class Faction {
 		NbtCompound eventsNbt = nbt.getCompound("Events");
 		for (String key : eventsNbt.getKeys()) {
 			faction.lastEventDays.put(key, eventsNbt.getLong(key));
+		}
+
+		NbtCompound criminalsNbt = nbt.getCompound("Criminals");
+		for (String key : criminalsNbt.getKeys()) {
+			try {
+				faction.criminals.put(UUID.fromString(key), criminalsNbt.getLong(key));
+			} catch (IllegalArgumentException ignored) {
+				// Skip malformed entries rather than failing the whole load.
+			}
 		}
 		return faction;
 	}

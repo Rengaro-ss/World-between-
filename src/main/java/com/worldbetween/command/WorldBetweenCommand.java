@@ -13,11 +13,18 @@ import com.worldbetween.faction.FactionBehaviors;
 import com.worldbetween.faction.FactionType;
 import com.worldbetween.faction.ResourceType;
 import com.worldbetween.faction.Settlement;
+import com.worldbetween.mine.MineManager;
+import com.worldbetween.mine.MinePlan;
 import com.worldbetween.sim.SimulationContext;
 import com.worldbetween.sim.WorldSimulation;
 import com.worldbetween.world.ChronicleEntry;
 import com.worldbetween.world.WorldBetweenState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.command.CommandSource;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.MutableText;
@@ -25,6 +32,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -54,6 +62,14 @@ public final class WorldBetweenCommand {
 						.requires(source -> source.hasPermissionLevel(2))
 						.then(CommandManager.argument("days", IntegerArgumentType.integer(1, 1000))
 								.executes(WorldBetweenCommand::simulate)))
+				.then(CommandManager.literal("mine")
+						.executes(WorldBetweenCommand::mine)
+						.then(CommandManager.literal("map")
+								.requires(source -> source.hasPermissionLevel(2))
+								.then(CommandManager.argument("level", IntegerArgumentType.integer(1, 3))
+										.executes(context -> mineMap(context, 32))
+										.then(CommandManager.argument("radius", IntegerArgumentType.integer(4, 64))
+												.executes(context -> mineMap(context, IntegerArgumentType.getInteger(context, "radius")))))))
 				.then(CommandManager.literal("arrive")
 						.requires(source -> source.hasPermissionLevel(2))
 						.then(CommandManager.argument("faction", StringArgumentType.word())
@@ -156,6 +172,86 @@ public final class WorldBetweenCommand {
 		}
 		state.markDirty();
 		return 1;
+	}
+
+	private static MineManager.Site nearestMine(CommandContext<ServerCommandSource> context) {
+		Vec3d from = context.getSource().getPosition();
+		return MineManager.sites(WorldBetweenState.get(context.getSource().getServer())).stream()
+				.min(Comparator.comparingDouble(site -> site.mine().entrance().getSquaredDistance(from)))
+				.orElse(null);
+	}
+
+	private static int mine(CommandContext<ServerCommandSource> context) {
+		MineManager.Site site = nearestMine(context);
+		if (site == null) {
+			context.getSource().sendError(Text.translatable("command.worldbetween.mine.none"));
+			return 0;
+		}
+		ServerWorld world = context.getSource().getServer().getOverworld();
+		MinePlan plan = site.plan();
+		int progress = site.progress(world);
+		BlockPos entrance = site.mine().entrance();
+		BlockPos face = plan.faceAt(progress);
+		send(context, Text.translatable("command.worldbetween.mine.header", site.owner().displayName(), site.settlement().name())
+				.formatted(Formatting.GOLD));
+		send(context, Text.translatable("command.worldbetween.mine.entrance", entrance.getX(), entrance.getY(), entrance.getZ()));
+		send(context, Text.translatable("command.worldbetween.mine.progress", progress, site.mine().target(), plan.totalSteps(),
+				plan.segments().size()));
+		for (int level = 0; level < plan.levelCount(); level++) {
+			int start = level == 0 ? 0 : plan.levelEnd(level - 1);
+			int end = plan.levelEnd(level);
+			int percent = (int) (100L * Math.max(0, Math.min(progress, end) - start) / Math.max(1, end - start));
+			send(context, Text.translatable("command.worldbetween.mine.level", level + 1, plan.levelFloor(level), percent));
+		}
+		if (face != null) {
+			send(context, Text.translatable("command.worldbetween.mine.face", face.getX(), face.getY(), face.getZ()));
+		}
+		site.mine().stops().forEach((index, step) -> {
+			MinePlan.Segment segment = plan.segments().get(index);
+			BlockPos at = segment.sliceCenter(step);
+			send(context, Text.translatable("command.worldbetween.mine.stop", segment.kind().name(), at.getX(), at.getY(), at.getZ())
+					.formatted(Formatting.GRAY));
+		});
+		return 1;
+	}
+
+	/** A top-down map of one mine level, read from the actual blocks in the world. */
+	private static int mineMap(CommandContext<ServerCommandSource> context, int radius) {
+		MineManager.Site site = nearestMine(context);
+		if (site == null) {
+			context.getSource().sendError(Text.translatable("command.worldbetween.mine.none"));
+			return 0;
+		}
+		int level = IntegerArgumentType.getInteger(context, "level") - 1;
+		ServerWorld world = context.getSource().getServer().getOverworld();
+		BlockPos entrance = site.mine().entrance();
+		int y = site.plan().levelFloor(level);
+		StringBuilder map = new StringBuilder();
+		for (int dz = -radius; dz <= radius; dz++) {
+			map.append('\n');
+			for (int dx = -radius; dx <= radius; dx++) {
+				BlockPos pos = new BlockPos(entrance.getX() + dx, y, entrance.getZ() + dz);
+				map.append(mapChar(world.getBlockState(pos), world.getBlockState(pos.up()), world.getBlockState(pos.down())));
+			}
+		}
+		send(context, Text.translatable("command.worldbetween.mine.map", level + 1, y).formatted(Formatting.GOLD)
+				.append(Text.literal(map.toString()).formatted(Formatting.WHITE)));
+		return 1;
+	}
+
+	private static char mapChar(BlockState floor, BlockState head, BlockState below) {
+		if (floor.isOf(Blocks.RAIL)) return '=';
+		if (floor.isOf(Blocks.DARK_OAK_LOG)) return '#';
+		if (floor.isOf(Blocks.CHEST) || floor.isOf(Blocks.BARREL)) return 'C';
+		if (floor.isOf(Blocks.BLAST_FURNACE) || floor.isOf(Blocks.ANVIL) || floor.isOf(Blocks.SMITHING_TABLE) || floor.isOf(Blocks.CRAFTING_TABLE)) return 'F';
+		if (floor.isOf(Blocks.LADDER)) return 'H';
+		if (floor.isOf(Blocks.LANTERN) || floor.isOf(Blocks.WALL_TORCH)) return 'L';
+		if (floor.isOf(Blocks.POLISHED_BLACKSTONE_BRICKS)) return 'B';
+		if (floor.isAir() && below.isOf(Blocks.LAVA)) return '~';
+		if (floor.isOf(Blocks.LAVA)) return '~';
+		if (floor.isOf(Blocks.WATER)) return 'w';
+		if (floor.isAir() || floor.isOf(Blocks.CAVE_AIR)) return head.isAir() ? '.' : ',';
+		return ' ';
 	}
 
 	private static FactionType factionArgument(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {

@@ -25,6 +25,14 @@ public class WorldBetweenConfig {
 	/** New settlements are founded this far from their parent, in blocks. */
 	public int minExpansionDistance = 160;
 	public int maxExpansionDistance = 320;
+	/** Mine tunnel each staffed mine digs per day, in blocks. */
+	public int mineStepsPerDay = 8;
+	/** Time the guards give a noticed stranger to leave a mine, in seconds. */
+	public int trespassGraceSeconds = 180;
+	/** Chance per second that miners notice a stranger in their tunnels. */
+	public float noticeChancePerSecond = 0.15f;
+	/** Reputation at which a faction lets a player walk its mines freely. */
+	public int friendlyReputation = 30;
 	/** Announce chronicle events to all players in chat. */
 	public boolean broadcastChronicle = true;
 

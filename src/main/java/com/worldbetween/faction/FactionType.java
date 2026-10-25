@@ -1,5 +1,6 @@
 package com.worldbetween.faction;
 
+import com.mojang.serialization.Codec;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.BiomeTags;
@@ -21,6 +22,8 @@ public enum FactionType implements StringIdentifiable {
 	ARKI("arki", 0x7FA8FF),
 	/** The Kaments: awakened stone golems. Mountains and the deep. */
 	KAMENT("kament", 0x9C9C9C);
+
+	public static final Codec<FactionType> CODEC = StringIdentifiable.createCodec(FactionType::values);
 
 	private static final Set<RegistryKey<Biome>> NERIS_BIOMES = Set.of(
 			BiomeKeys.PLAINS, BiomeKeys.SUNFLOWER_PLAINS, BiomeKeys.MEADOW,

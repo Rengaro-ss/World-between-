@@ -271,6 +271,35 @@ ul.plain li::before { content: ""; position: absolute; left: 0; top: 0.62em; wid
 .results .muted { font-size: var(--step--1); }
 code { font-family: var(--mono); font-size: 0.86em; background: var(--sunk); padding: 0.05rem 0.3rem; }
 
+
+/* ---------- mines ---------- */
+.gallery { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1rem; }
+.gallery figure { margin: 0; display: grid; gap: 0.45rem; align-content: start; }
+.gallery img { width: 100%; height: auto; display: block; border: 1px solid var(--line); background: var(--sunk); image-rendering: pixelated; }
+.gallery figcaption { font-size: var(--step--1); color: var(--muted); }
+.gallery figcaption b { color: var(--fg); font-weight: 600; }
+.gallery .wide { grid-column: span 3; }
+.gallery .third { grid-column: span 2; }
+@media (max-width: 760px) { .gallery .wide, .gallery .third { grid-column: span 6; } }
+.levels { overflow-x: auto; border: 1px solid var(--line); margin-top: 2.5rem; }
+.levels table { border-collapse: collapse; width: 100%; min-width: 560px; background: var(--surface); font-size: var(--step--1); }
+.levels th, .levels td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.levels th { font-family: var(--label); color: var(--muted); font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; }
+.levels tr:last-child td { border-bottom: 0; }
+.levels td.y { font-family: var(--mono); white-space: nowrap; }
+.mapfig { margin: 2.5rem 0 0; display: grid; gap: 0.6rem; }
+.mapfig pre { margin: 0; font-family: var(--mono); font-size: 0.68rem; line-height: 1.15; background: #0d0c10; color: #b9b3a8; padding: 1rem 1.2rem; overflow-x: auto; border: 1px solid var(--line); }
+.mapfig pre .r { color: #e2b75c; } .mapfig pre .t { color: #9a6a3a; } .mapfig pre .l { color: #ff9a3c; } .mapfig pre .c { color: #7fd6e8; } .mapfig pre .b { color: #8a8494; } .mapfig pre .w { color: #4d7fd1; }
+.mapfig figcaption { font-size: var(--step--1); color: var(--muted); max-width: 75ch; }
+.guard-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 2.5rem; }
+.guard-steps > div { background: var(--surface); padding: 1.1rem 1.25rem; display: grid; gap: 0.35rem; align-content: start; }
+.guard-steps .when { font-family: var(--mono); font-size: 0.75rem; color: var(--neris); }
+.guard-steps h4 { font-size: 1.05rem; }
+.proofs { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+.proofs figure { margin: 0; display: grid; gap: 0.4rem; }
+.proofs img { width: 100%; height: auto; border: 1px solid var(--line); display: block; }
+.proofs figcaption { font-size: var(--step--1); color: var(--muted); }
+
 footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); }
 </style>
 
@@ -281,6 +310,7 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
     <a href="#peoples">Три народа</a>
     <a href="#relations">Отношения</a>
     <a href="#engine">Как это работает</a>
+    <a href="#mines">Шахты</a>
     <a href="#player">Игрок</a>
     <a href="#roadmap">План</a>
     <a href="#ideas">Идеи</a>
@@ -294,7 +324,7 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
     <p class="lead column">Мир делят три народа. Они растут, добывают ресурсы, строят и воюют, даже когда рядом нет ни одного игрока. Ты не их герой и не их король. Ты выживаешь между ними.</p>
     <div class="chips">
       <span class="chip live">в разработке · v0.1</span>
-      <span class="chip">ядро и экономика Нерис работают</span>
+      <span class="chip">ядро, экономика и шахты Нерис работают</span>
       <span class="chip">Minecraft 1.21.1</span>
       <span class="chip">Fabric Loader 0.17</span>
       <span class="chip">Java 21</span>
@@ -543,6 +573,88 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
   </div>
 </section>
 
+<section id="mines">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Шахты Нерис · работает в игре</span>
+      <h2>Шахты, которые растут</h2>
+      <p class="column muted">Первая постройка, которая из чисел превратилась в настоящие блоки. Шахта Нерис каждый день уходит глубже и шире, даже когда рядом никого нет. Игрок, копающий свою шахту, может однажды услышать за стеной стук кирок и пробиться в освещённый штрек с рельсами. Все снимки ниже — настоящие кадры из Minecraft с модом.</p>
+    </header>
+
+    <div class="gallery">
+      <figure class="wide"><img src="img/mine-lava.jpg" alt="Глубокий штрек: слева лавовый канал, крепь из тёмного дуба, по центру рельсы" width="1280" height="720" loading="lazy"><figcaption><b>Лавовый штрек.</b> Самый глубокий горизонт. Нерис закалены адом и не боятся лавы: они отводят её в каменный желоб вдоль стены.</figcaption></figure>
+      <figure class="wide"><img src="img/mine-forge.jpg" alt="Подземная кузня: лавовый бассейн в центре, доменные печи, наковальни, сундук" width="1280" height="720" loading="lazy"><figcaption><b>Подземная кузня</b> в конце лавового штрека: лавовый бассейн, доменные печи, наковальни и сундук с откованным металлом.</figcaption></figure>
+      <figure class="third"><img src="img/mine-drift.jpg" alt="Штрек первого горизонта с рельсами и крепью" width="1280" height="720" loading="lazy"><figcaption><b>Штрек.</b> 3 блока в ширину и высоту, рельсы и крепь через каждые 4 блока.</figcaption></figure>
+      <figure class="third"><img src="img/mine-store.jpg" alt="Склад руды у ствола: сундуки, бочка и верстак" width="1280" height="690" loading="lazy"><figcaption><b>Склад руды</b> у ствола на каждом горизонте. Всё внутри помечено как собственность королевства.</figcaption></figure>
+      <figure class="third"><img src="img/mine-headframe.jpg" alt="Надшахтная башня из тёмного дуба с цепью подъёмника и фонарями" width="1280" height="720" loading="lazy"><figcaption><b>Надшахтная башня</b> над стволом: столбы из тёмного дуба, цепь подъёмника, фонари, ограждение.</figcaption></figure>
+      <figure class="wide"><img src="img/mine-surface.jpg" alt="Поверхность: надшахтная башня в лесу и большой террикон из булыжника и гравия" width="1280" height="720" loading="lazy"><figcaption><b>Террикон.</b> Отвал пустой породы растёт вместе с шахтой. Большая гора отвала издалека выдаёт глубокую шахту внизу.</figcaption></figure>
+      <figure class="wide"><img src="img/mine-guards.jpg" alt="Игрок в штреке, сверху полоса: Стража Королевства Нерис идёт за вами" width="1280" height="720" loading="lazy"><figcaption><b>Вас заметили.</b> Через несколько секунд после появления чужака сверху появляется отсчёт: стража вышла от ствола.</figcaption></figure>
+    </div>
+
+    <figure class="mapfig">
+      <pre aria-label="План третьего горизонта шахты, вид сверху">                             .<span class="r">=</span>.
+                             <span class="t">#</span><span class="r">=</span><span class="t">#</span>
+                       ..<span class="l">L</span>....<span class="r">=</span>.          <span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span>
+                       .......<span class="r">=</span>.         <span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span>
+                             .<span class="r">=</span>.        <span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span>
+                             <span class="t">#</span><span class="r">=</span><span class="t">#</span>        <span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span>
+              ..             .<span class="r">=</span>. ,,,
+    ..        ..       ..    .<span class="r">=</span>..............
+    ..        ..       ..    <span class="t">#</span><span class="r">=</span><span class="t">#</span>...<span class="l">L</span>......<span class="l">L</span>..
+    .<span class="l">L</span>   <span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="b">B</span>.<span class="l">L</span>       .<span class="l">L</span>    .<span class="r">=</span>.  ....
+    ..   <span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="w">w</span><span class="b">B</span>..       ..    .<span class="r">=</span>.  ....
+    ..  <span class="b">B</span><span class="b">B</span><span class="b">B</span><span class="b">B</span><span class="b">B</span><span class="b">B</span>..       ..    .<span class="r">=</span>..<span class="c">C</span>.<span class="c">C</span>.<span class="c">C</span>.
+..<span class="t">#</span>...<span class="t">#</span>...<span class="t">#</span>...<span class="t">#</span>...<span class="t">#</span>...<span class="t">#</span>...<span class="t">#</span>...<span class="r">=</span>.......<span class="c">F</span>
+<span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span><span class="r">=</span>..........
+......................................<span class="c">C</span>
+..<span class="t">#</span>...<span class="t">#</span>...<span class="t">#</span>...<span class="t">#</span>...<span class="t">#</span>...<span class="t">#</span>...<span class="t">#</span>............
+<span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span><span class="l">~</span>.<span class="r">=</span>.......<span class="c">C</span>
+                       .......<span class="r">=</span>..<span class="c">C</span>.<span class="c">C</span>.<span class="c">C</span>.
+                         ....<span class="t">#</span><span class="r">=</span><span class="t">#</span>
+                          ....<span class="r">=</span>.,
+                            ..<span class="r">=</span>..............
+                             <span class="t">#</span><span class="r">=</span><span class="t">#</span>...<span class="l">L</span>......<span class="l">L</span>..
+                             .<span class="r">=</span>....,,
+                 .<span class="l">L</span>......<span class="l">L</span>....<span class="r">=</span>.     .....
+                 .............<span class="r">=</span>.       ...</pre>
+      <figcaption>План нижнего горизонта (y = −44), снятый командой <code>/wb mine map 3</code> прямо из блоков мира. <span style="color:#e2b75c">=</span> рельсы, <span style="color:#9a6a3a">#</span> крепь, <span style="color:#7fd6e8">C</span> склад, <span style="color:#ff9a3c">~</span> лавовый канал, <span style="color:#ff9a3c">L</span> фонари, <span style="color:#4d7fd1">w</span> подземное озеро, <span style="color:#8a8494">B</span> кладка, которой шахтёры замуровали воду. Запятыми отмечены естественные пещеры, через которые прошли туннели.</figcaption>
+    </figure>
+
+    <div class="levels">
+      <table>
+        <thead><tr><th>Горизонт</th><th>Глубина</th><th>Открывается</th><th>Что добывают</th></tr></thead>
+        <tbody>
+          <tr><td>Первый</td><td class="y">y ≈ 44</td><td>Изгнание</td><td>Уголь, медь, железо</td></tr>
+          <tr><td>Второй</td><td class="y">y = 4</td><td>Бронзовый век</td><td>Железо, золото, редстоун</td></tr>
+          <tr><td>Нижний</td><td class="y">y = −44</td><td>Стальной век</td><td>Алмазы; лавовые каналы и подземная кузня</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="principles" style="margin-top: 2.5rem;">
+      <div class="principle"><h4>Растут каждый день</h4><p class="muted">Каждая шахта с бригадой проходит около 8 блоков туннеля в день. Если игрок рядом, туннель удлиняется у него на глазах, блок за блоком.</p></div>
+      <div class="principle"><h4>Вынимают руду</h4><p class="muted">Шахтёры забирают руду из стен туннелей. Вокруг шахт королевства жилы со временем пустеют.</p></div>
+      <div class="principle"><h4>Не ломают ваше</h4><p class="muted">Туннель режет только природный камень. Встретив постройку игрока, он останавливается, ставит стену из кладки и табличку «Недра Королевства Нерис. Хода нет».</p></div>
+      <div class="principle"><h4>Слышно сквозь камень</h4><p class="muted">У действующего забоя стучат кирки. Звук слышен через стену за два десятка блоков, раньше, чем вы пробьётесь внутрь.</p></div>
+      <div class="principle"><h4>Держат воду и лаву</h4><p class="muted">Подземные озёра и лава вдоль туннелей замуровываются чёрным кирпичом, через пещеры перекидываются мостки.</p></div>
+      <div class="principle"><h4>Почти ничего не весят</h4><p class="muted">Шахта генерируется из своего зерна, поэтому в сохранении хранится всего пара чисел, а не тысячи блоков.</p></div>
+    </div>
+
+    <div class="guard-steps" aria-label="Как работает охрана шахты">
+      <div><span class="when">в шахте</span><h4>Шахтёры работают</h4><p class="muted">Чужака не трогают, но каждую секунду могут его заметить. Друзей королевства (репутация от +30) не трогают вовсе.</p></div>
+      <div><span class="when">заметили · 0:00</span><h4>Стража выходит</h4><p class="muted">От ствола выходит стража, и на экране начинается трёхминутный отсчёт. Кража руды или порча крепи замечаются сразу.</p></div>
+      <div><span class="when">ушёл вовремя</span><h4>Всё спокойно</h4><p class="muted">Покинул шахту, и стража возвращается на пост. Никаких последствий.</p></div>
+      <div><span class="when">3:00 · остался</span><h4>Преступник</h4><p class="muted">Королевство объявляет игрока преступником, репутация падает на 25, а событие попадает в летопись мира.</p></div>
+    </div>
+
+    <div class="proofs">
+      <figure><img src="img/ui-owner.jpg" alt="Подсказка предмета: Рудное железо, Собственность: Королевство Нерис" width="600" height="110" loading="lazy"><figcaption>Метка собственности в подсказке предмета. Она общая для всех трёх народов.</figcaption></figure>
+      <figure><img src="img/ui-theft.jpg" alt="Сообщение в чате: Это собственность Королевства Нерис. Взять её — значит украсть." width="680" height="60" loading="lazy"><figcaption>Игрок взял руду из сундука шахты.</figcaption></figure>
+      <figure><img src="img/ui-criminal.jpg" alt="Сообщения в чате: игрок объявлен преступником, запись в летописи" width="680" height="110" loading="lazy"><figcaption>Отсчёт истёк, игрок остался в шахте.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
 <section id="player">
   <div class="wrap">
     <header>
@@ -631,13 +743,14 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
     <div class="roadmap">
       <div class="stage"><span class="num">1</span><div><h4>Каркас и ядро симуляции</h4><p>Проект Fabric, сохранение состояния мира, игровой день симуляции, летопись, конфиг, команда <code>/wb</code>.</p></div><span class="status done">готово</span></div>
       <div class="stage"><span class="num">2</span><div><h4>Экономика Нерис</h4><p>Население, ресурсы, производственные цепочки, строительство, ярусы поселений, эпохи, расширение. Первая версия работает, баланс ещё настраивается: сейчас королевство расширяется слишком быстро.</p></div><span class="status done">первая версия</span></div>
-      <div class="stage"><span class="num">3</span><div><h4>Материализация</h4><p>Шаблоны построек Нерис, постановка блоков при загрузке чанка, адский портал прибытия.</p></div><span class="status now">следующий шаг</span></div>
-      <div class="stage"><span class="num">4</span><div><h4>Существа Нерис</h4><p>Модели, текстуры и ИИ: жители, рабочие, стража, командиры.</p></div><span class="status next">дальше</span></div>
-      <div class="stage"><span class="num">5</span><div><h4>Репутация и торговля</h4><p>Отношение к каждому игроку, законы на территории, торговцы, контракты.</p></div><span class="status next">дальше</span></div>
-      <div class="stage"><span class="num">6</span><div><h4>Адская кампания</h4><p>Форпосты Нерис в Нижнем мире, война с адской фауной, незерит.</p></div><span class="status next">дальше</span></div>
-      <div class="stage"><span class="num">7</span><div><h4>Каменты</h4><p>Пробуждение, каменоломни, стены, монументы, запрет на руду.</p></div><span class="status next">дальше</span></div>
-      <div class="stage"><span class="num">8</span><div><h4>Арки</h4><p>Кометные капсулы, города на воде, небесные острова, звёздная магия.</p></div><span class="status next">дальше</span></div>
-      <div class="stage"><span class="num">9</span><div><h4>Войны и легендарные деяния</h4><p>Конфликты фракций, осады, падение народов, баланс и оптимизация.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">3</span><div><h4>Шахты Нерис</h4><p>Растущие шахты с тремя горизонтами, лавовыми каналами и кузней; охрана, статус преступника, метки собственности на добытом.</p></div><span class="status done">готово</span></div>
+      <div class="stage"><span class="num">4</span><div><h4>Остальные постройки</h4><p>Шаблоны домов, ферм, кузниц, фортов и замков Нерис, адский портал прибытия.</p></div><span class="status now">следующий шаг</span></div>
+      <div class="stage"><span class="num">5</span><div><h4>Существа Нерис</h4><p>Модели, текстуры и ИИ: жители, рабочие, стража, командиры.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">6</span><div><h4>Репутация и торговля</h4><p>Отношение к каждому игроку, законы на территории, торговцы, контракты.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">7</span><div><h4>Адская кампания</h4><p>Форпосты Нерис в Нижнем мире, война с адской фауной, незерит.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">8</span><div><h4>Каменты</h4><p>Пробуждение, каменоломни, стены, монументы, запрет на руду.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">9</span><div><h4>Арки</h4><p>Кометные капсулы, города на воде, небесные острова, звёздная магия.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">10</span><div><h4>Войны и легендарные деяния</h4><p>Конфликты фракций, осады, падение народов, баланс и оптимизация.</p></div><span class="status next">дальше</span></div>
     </div>
   </div>
 </section>

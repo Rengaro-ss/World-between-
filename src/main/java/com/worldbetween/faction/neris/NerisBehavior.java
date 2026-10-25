@@ -4,13 +4,18 @@ import com.worldbetween.faction.BuildingType;
 import com.worldbetween.faction.Faction;
 import com.worldbetween.faction.FactionBehavior;
 import com.worldbetween.faction.FactionType;
+import com.worldbetween.faction.Mine;
 import com.worldbetween.faction.ResourceType;
 import com.worldbetween.faction.Settlement;
+import com.worldbetween.mine.MineManager;
+import com.worldbetween.mine.MinePlan;
 import com.worldbetween.sim.LocationFinder;
 import com.worldbetween.sim.SimulationContext;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
 
 import java.util.Comparator;
@@ -97,6 +102,8 @@ public class NerisBehavior implements FactionBehavior {
 		faction.addResource(ResourceType.METAL, forged % 3);
 		faction.addResource(ResourceType.EQUIPMENT, forged / 3);
 
+		dig(context, faction, settlement, staffed.get(BuildingType.MINE));
+
 		for (int i = 0; i < staffed.get(BuildingType.BARRACKS); i++) {
 			if (settlement.population() <= ARRIVAL_POPULATION || faction.takeResource(ResourceType.EQUIPMENT, 1) == 0) {
 				break;
@@ -106,6 +113,43 @@ public class NerisBehavior implements FactionBehavior {
 		}
 
 		build(context, faction, settlement, available);
+	}
+
+	/**
+	 * Real tunnels grow with the abstract mines. Each era opens a deeper level:
+	 * copper and iron in Exile, gold from the Bronze Age, diamonds and lava forges from the Steel Age.
+	 */
+	private void dig(SimulationContext context, Faction faction, Settlement settlement, int staffedMines) {
+		if (settlement.mine() == null) {
+			if (settlement.buildingCount(BuildingType.MINE) == 0 || settlement.dimension() != World.OVERWORLD) {
+				return;
+			}
+			settlement.setMine(new Mine(context.random().nextLong(), mineEntrance(context, settlement)));
+		}
+		Mine mine = settlement.mine();
+		MinePlan plan = MineManager.plan(mine);
+		int deepest = faction.era() >= 3 ? 2 : faction.era() >= 1 ? 1 : 0;
+		int before = mine.target();
+		mine.dig(staffedMines * context.config().mineStepsPerDay, plan.levelEnd(deepest));
+		for (int level = 1; level < plan.levelCount(); level++) {
+			int levelStart = plan.levelEnd(level - 1);
+			if (before <= levelStart && mine.target() > levelStart
+					&& faction.tryEvent("mine_level_" + level, context.day(), Long.MAX_VALUE)) {
+				context.chronicle(FactionType.NERIS, "chronicle.worldbetween.neris.mine_level_" + level, settlement.name());
+			}
+		}
+	}
+
+	/** The shaft is sunk a short walk from the settlement, at ground level. */
+	private static BlockPos mineEntrance(SimulationContext context, Settlement settlement) {
+		ServerWorld world = context.server().getOverworld();
+		double angle = context.random().nextDouble() * Math.PI * 2;
+		double distance = MathHelper.lerp(context.random().nextDouble(), 14, 22);
+		int x = settlement.pos().getX() + (int) (Math.cos(angle) * distance);
+		int z = settlement.pos().getZ() + (int) (Math.sin(angle) * distance);
+		int y = world.getChunkManager().getChunkGenerator().getHeight(x, z, Heightmap.Type.WORLD_SURFACE_WG,
+				world, world.getChunkManager().getNoiseConfig()) - 1;
+		return new BlockPos(x, y, z);
 	}
 
 	private void build(SimulationContext context, Faction faction, Settlement settlement, int idleWorkers) {
