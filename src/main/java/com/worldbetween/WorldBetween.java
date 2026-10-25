@@ -6,6 +6,8 @@ import com.worldbetween.item.Ownership;
 import com.worldbetween.mine.MineManager;
 import com.worldbetween.mine.MineSecurity;
 import com.worldbetween.sim.WorldSimulation;
+import com.worldbetween.town.TownActivity;
+import com.worldbetween.town.TownManager;
 import com.worldbetween.world.WorldBetweenAttachments;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -35,6 +37,8 @@ public class WorldBetween implements ModInitializer {
 		ServerTickEvents.END_SERVER_TICK.register(WorldSimulation::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(MineManager::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(MineSecurity::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(TownManager::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(TownActivity::onServerTick);
 		PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
 			if (world instanceof ServerWorld serverWorld && player instanceof ServerPlayerEntity serverPlayer) {
 				MineSecurity.onBlockBroken(serverPlayer, serverWorld, pos, state);

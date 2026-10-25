@@ -7,7 +7,12 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,6 +30,11 @@ public class Settlement {
 	private BuildingType project;
 	private int projectProgress;
 	private Mine mine;
+	/** The settlement this one was founded from, or -1 for the first one. Roads run between them. */
+	private int parentId = -1;
+	private final List<Plot> plots = new ArrayList<>();
+	/** Buildings that had a full crew on the last simulated day; not saved, rebuilt every day. */
+	private final EnumMap<BuildingType, Integer> staffed = new EnumMap<>(BuildingType.class);
 
 	public Settlement(int id, String name, BlockPos pos, RegistryKey<World> dimension, long foundedDay) {
 		this.id = id;
@@ -123,6 +133,27 @@ public class Settlement {
 		this.mine = mine;
 	}
 
+	public int parentId() {
+		return parentId;
+	}
+
+	public void setParentId(int parentId) {
+		this.parentId = parentId;
+	}
+
+	public List<Plot> plots() {
+		return plots;
+	}
+
+	public Map<BuildingType, Integer> staffed() {
+		return staffed;
+	}
+
+	/** Whether the faction treats this settlement as its capital: the first one it founded. */
+	public boolean isCapital() {
+		return id == 0;
+	}
+
 	/** Key that identifies this settlement across the mod, e.g. in chunk data. */
 	public String key(FactionType faction) {
 		return faction.id() + ":" + id;
@@ -147,6 +178,10 @@ public class Settlement {
 		if (mine != null) {
 			nbt.put("Mine", mine.toNbt());
 		}
+		nbt.putInt("Parent", parentId);
+		NbtList plotsNbt = new NbtList();
+		plots.forEach(plot -> plotsNbt.add(plot.toNbt()));
+		nbt.put("Plots", plotsNbt);
 		return nbt;
 	}
 
@@ -172,6 +207,14 @@ public class Settlement {
 		}
 		if (nbt.contains("Mine")) {
 			settlement.mine = Mine.fromNbt(nbt.getCompound("Mine"));
+		}
+		settlement.parentId = nbt.contains("Parent") ? nbt.getInt("Parent") : -1;
+		NbtList plotsNbt = nbt.getList("Plots", NbtElement.COMPOUND_TYPE);
+		for (int i = 0; i < plotsNbt.size(); i++) {
+			Plot plot = Plot.fromNbt(plotsNbt.getCompound(i));
+			if (plot != null) {
+				settlement.plots.add(plot);
+			}
 		}
 		return settlement;
 	}

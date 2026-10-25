@@ -120,12 +120,18 @@ public class Faction {
 	}
 
 	public boolean canAfford(BuildingType building) {
-		return resource(ResourceType.WOOD) >= building.woodCost() && resource(ResourceType.STONE) >= building.stoneCost();
+		return resource(ResourceType.WOOD) >= building.woodCost() && resource(ResourceType.STONE) >= building.stoneCost()
+				&& resource(ResourceType.BRICKS) >= building.brickCost();
 	}
 
 	public void pay(BuildingType building) {
 		takeResource(ResourceType.WOOD, building.woodCost());
 		takeResource(ResourceType.STONE, building.stoneCost());
+		takeResource(ResourceType.BRICKS, building.brickCost());
+	}
+
+	public int totalBuildings(BuildingType type) {
+		return settlements.stream().mapToInt(s -> s.buildingCount(type)).sum();
 	}
 
 	public List<Settlement> settlements() {

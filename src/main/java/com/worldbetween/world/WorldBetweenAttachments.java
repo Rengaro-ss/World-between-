@@ -19,6 +19,10 @@ public final class WorldBetweenAttachments {
 	public static final AttachmentType<Map<String, Integer>> MINE_PROGRESS = AttachmentRegistry.createPersistent(
 			Identifier.of(WorldBetween.MOD_ID, "mine_progress"), Codec.unboundedMap(Codec.STRING, Codec.INT));
 
+	/** Which version of each town feature has been built into this chunk, keyed by feature. */
+	public static final AttachmentType<Map<String, Integer>> TOWN_BUILT = AttachmentRegistry.createPersistent(
+			Identifier.of(WorldBetween.MOD_ID, "town_built"), Codec.unboundedMap(Codec.STRING, Codec.INT));
+
 	private WorldBetweenAttachments() {
 	}
 

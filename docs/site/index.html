@@ -300,6 +300,22 @@ code { font-family: var(--mono); font-size: 0.86em; background: var(--sunk); pad
 .proofs img { width: 100%; height: auto; border: 1px solid var(--line); display: block; }
 .proofs figcaption { font-size: var(--step--1); color: var(--muted); }
 
+
+/* ---------- towns ---------- */
+.chains { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 2.5rem; }
+.chains > div { background: var(--surface); padding: 1rem 1.2rem; display: grid; gap: 0.4rem; align-content: start; }
+.chains .label { font-family: var(--label); font-size: var(--step--1); color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; font-size: 0.92rem; }
+.flow b { font-weight: 600; border: 1px solid var(--neris); padding: 0.1rem 0.45rem; background: var(--bg); }
+.flow i { font-style: normal; color: var(--muted); font-family: var(--mono); font-size: 0.78rem; }
+.flow .arrow { color: var(--neris); }
+.roles { overflow-x: auto; border: 1px solid var(--line); margin-top: 2.5rem; }
+.roles table { border-collapse: collapse; width: 100%; min-width: 620px; background: var(--surface); font-size: var(--step--1); }
+.roles th, .roles td { text-align: left; padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.roles th { font-family: var(--label); color: var(--muted); font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; }
+.roles tr:last-child td { border-bottom: 0; }
+.roles td:first-child { white-space: nowrap; font-weight: 600; }
+
 footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); }
 </style>
 
@@ -311,6 +327,7 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
     <a href="#relations">Отношения</a>
     <a href="#engine">Как это работает</a>
     <a href="#mines">Шахты</a>
+    <a href="#towns">Города</a>
     <a href="#player">Игрок</a>
     <a href="#roadmap">План</a>
     <a href="#ideas">Идеи</a>
@@ -324,7 +341,7 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
     <p class="lead column">Мир делят три народа. Они растут, добывают ресурсы, строят и воюют, даже когда рядом нет ни одного игрока. Ты не их герой и не их король. Ты выживаешь между ними.</p>
     <div class="chips">
       <span class="chip live">в разработке · v0.1</span>
-      <span class="chip">ядро, экономика и шахты Нерис работают</span>
+      <span class="chip">экономика, шахты и города Нерис работают</span>
       <span class="chip">Minecraft 1.21.1</span>
       <span class="chip">Fabric Loader 0.17</span>
       <span class="chip">Java 21</span>
@@ -556,19 +573,17 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
       </div>
     </div>
 
-    <div class="chain-wrap" role="img" aria-label="Производственная цепочка Нерис: шахта даёт руду, плавильня превращает её в металл, кузня делает снаряжение, казармы превращают жителей в солдат. Фермы кормят всех.">
+    <div class="chain-wrap" role="img" aria-label="Пример цепочки: шахта и углежжёная печь дают руду и топливо, плавильня делает металл, кузня с кожей из дубильни делает снаряжение, казармы с сукном из ткацкой делают солдат">
       <div class="chain">
-        <div class="node">Шахта<small>+3 руды</small></div>
+        <div class="node">Шахта + углежжёная печь<small>+3 руды, +1 и +4 топлива</small></div>
         <span class="arrow">→</span>
-        <div class="node">Плавильня<small>4 руды → 2 металла</small></div>
+        <div class="node">Плавильня<small>4 руды + 2 топлива → 2 металла</small></div>
         <span class="arrow">→</span>
-        <div class="node">Кузня<small>3 металла → 1 комплект</small></div>
+        <div class="node">Кузня<small>3 металла + 1 кожа → снаряжение</small></div>
         <span class="arrow">→</span>
-        <div class="node">Казармы<small>житель + комплект → солдат</small></div>
-        <span class="arrow">→</span>
-        <div class="node">Армия<small>ест в 1,5 раза больше</small></div>
+        <div class="node">Казармы<small>снаряжение + сукно + житель → солдат</small></div>
       </div>
-      <p class="chain-note">Так выглядит один день экономики Нерис в текущей версии. Каждая постройка требует рабочих; рабочих сначала ставят на фермы, потом на сырьё, потом на промышленность. Свободные руки уходят на стройку. Узкое место инженеры Нерис закрывают первым: не хватает еды — строят ферму, тесно — дом.</p>
+      <p class="chain-note">Одна из восьми цепочек хозяйства Нерис (все — в разделе «Города»). Каждому зданию нужны рабочие: сначала их ставят на поля, потом на сырьё, потом на переработку. Инженеры Нерис сначала закрывают самое узкое место: не хватает еды — поля и пекарни, кончилось дерево — пилорама, тесно — дома. В армию берут не больше одного из семи жителей.</p>
     </div>
   </div>
 </section>
@@ -651,6 +666,62 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
       <figure><img src="img/ui-owner.jpg" alt="Подсказка предмета: Рудное железо, Собственность: Королевство Нерис" width="600" height="110" loading="lazy"><figcaption>Метка собственности в подсказке предмета. Она общая для всех трёх народов.</figcaption></figure>
       <figure><img src="img/ui-theft.jpg" alt="Сообщение в чате: Это собственность Королевства Нерис. Взять её — значит украсть." width="680" height="60" loading="lazy"><figcaption>Игрок взял руду из сундука шахты.</figcaption></figure>
       <figure><img src="img/ui-criminal.jpg" alt="Сообщения в чате: игрок объявлен преступником, запись в летописи" width="680" height="110" loading="lazy"><figcaption>Отсчёт истёк, игрок остался в шахте.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="towns">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Города Нерис · работает в игре</span>
+      <h2>Города, которые растут сами</h2>
+      <p class="column muted">Каждое поселение Нерис — настоящий город в мире. Он вырастает из лагеря беглецов в замок со стенами, и ни одно здание в нём не стоит для красоты: у каждого есть роль в хозяйстве. Когда игрок рядом и светло, город работает: горят печи, дымят трубы, стучат молоты, зреют и убираются поля. Ночью всё затихает. Снимки — настоящие кадры из игры.</p>
+    </header>
+
+    <div class="gallery">
+      <figure class="wide"><img src="img/town-plaza.jpg" alt="Площадь столицы: рыночные лавки, монумент с жаровнями, тронный зал со знамёнами и городской дом с медной крышей" width="1280" height="720" loading="lazy"><figcaption><b>Площадь столицы.</b> Рыночные лавки вокруг монумента-горна, за ними тронный зал со знамёнами Нерис, справа городской дом с «бронзовой» крышей.</figcaption></figure>
+      <figure class="wide"><img src="img/town-night.jpg" alt="Та же площадь ночью: темнота, светятся фонари и жаровни" width="1280" height="720" loading="lazy"><figcaption><b>Та же площадь ночью.</b> Мастерские затихают, печи гаснут, горят только фонари и жаровни монумента.</figcaption></figure>
+      <figure class="third"><img src="img/town-throne.jpg" alt="Тронный зал: оранжево-чёрная ковровая дорожка, трон на возвышении, знамёна на стене, колонны" width="1280" height="720" loading="lazy"><figcaption><b>Тронный зал</b> есть только в столице: трон на возвышении, знамёна, колонны чёрного камня.</figcaption></figure>
+      <figure class="third"><img src="img/town-capital.jpg" alt="Столица издалека: улица огибает холм, дома разных размеров, площадь и ратуша" width="1280" height="720" loading="lazy"><figcaption><b>Столица издалека.</b> Улица огибает холм, у площади городские дома, на окраинах избы.</figcaption></figure>
+      <figure class="third"><img src="img/town-fort.jpg" alt="Форт: поля с оросительными каналами, каменоломня, дома и ратуша-крепость" width="1280" height="720" loading="lazy"><figcaption><b>Форт.</b> Поля с каналами, каменоломня, дома, ратуша-крепость на холме.</figcaption></figure>
+    </div>
+
+    <div class="chains" aria-label="Производственные цепочки Нерис">
+      <div><span class="label">Хлеб</span><div class="flow"><b>Ферма</b><span class="arrow">→</span><i>зерно</i><span class="arrow">→</span><b>Мельница</b><span class="arrow">→</span><i>мука</i><span class="arrow">→</span><b>Пекарня</b><span class="arrow">→</span><i>еда ×1,7</i></div></div>
+      <div><span class="label">Скот</span><div class="flow"><b>Пастбище</b><span class="arrow">→</span><i>мясо, шерсть, шкуры</i><span class="arrow">→</span><b>Кухня</b><span class="arrow">→</span><i>еда ×2</i></div></div>
+      <div><span class="label">Дерево</span><div class="flow"><b>Лесопилка</b><span class="arrow">→</span><i>брёвна</i><span class="arrow">→</span><b>Пилорама</b><span class="arrow">→</span><i>доски</i></div></div>
+      <div><span class="label">Камень</span><div class="flow"><b>Каменоломня</b><span class="arrow">→</span><i>камень</i><span class="arrow">→</span><b>Каменотёсня</b><span class="arrow">→</span><i>тёсаный камень</i></div></div>
+      <div><span class="label">Металл</span><div class="flow"><b>Шахта</b><span class="arrow">+</span><b>Углежжёная печь</b><span class="arrow">→</span><i>руда, топливо</i><span class="arrow">→</span><b>Плавильня</b><span class="arrow">→</span><i>металл</i></div></div>
+      <div><span class="label">Снаряжение</span><div class="flow"><i>металл</i><span class="arrow">+</span><b>Дубильня</b><i>(кожа)</i><span class="arrow">→</span><b>Кузня</b><span class="arrow">→</span><i>снаряжение</i></div></div>
+      <div><span class="label">Армия</span><div class="flow"><i>снаряжение</i><span class="arrow">+</span><b>Ткацкая</b><i>(сукно)</i><span class="arrow">+</span><i>житель</i><span class="arrow">→</span><b>Казармы</b><span class="arrow">→</span><i>солдат</i></div></div>
+      <div><span class="label">Эпохи</span><div class="flow"><b>Библиотека</b><span class="arrow">→</span><i>знания</i><span class="arrow">+</span><i>металл</i><span class="arrow">→</span><i>новая эпоха</i></div></div>
+    </div>
+
+    <div class="roles">
+      <table>
+        <thead><tr><th>Здание</th><th>Роль в хозяйстве</th><th>Что видно, когда идёт работа</th></tr></thead>
+        <tbody>
+          <tr><td>Ратуша</td><td>Уровень поселения; +5% к производству за каждый уровень. Шатёр → дом собраний → крепость → замок; в столице тронный зал</td><td>Знамёна, летопись на кафедре</td></tr>
+          <tr><td>Дома</td><td>Жильё: 5, 7, 9 или 11 жителей. Четыре вида, растут по мере тесноты; большие дома у площади</td><td>Дым из труб днём</td></tr>
+          <tr><td>Склад</td><td>Предел запасов: 300 + 400 за каждый склад, излишки портятся</td><td>Хлопают бочки</td></tr>
+          <tr><td>Рынок</td><td>Каждый день меняет излишки на то, чего не хватает (2 к 1). Лавок больше по мере роста города</td><td>Торговля у лавок</td></tr>
+          <tr><td>Дозорная башня</td><td>Без дозорных воры и волки растаскивают запасы; каждая башня снижает потери</td><td>Знамя королевства на вершине</td></tr>
+          <tr><td>Библиотека</td><td>Знания для новых эпох; хранит летопись поселения на кафедре</td><td>Шелест страниц</td></tr>
+          <tr><td>Кухня, пекарня</td><td>Превращают сырьё в сытную еду, корм для армии</td><td>Горят коптильни и печи, дым</td></tr>
+          <tr><td>Кузня, плавильня</td><td>Металл и снаряжение для армии</td><td>Звон наковальни, искры, огонь в горнах</td></tr>
+          <tr><td>Поля, пастбища</td><td>Зерно, мясо, шерсть, шкуры</td><td>Посевы растут и убираются, стада восполняются</td></tr>
+          <tr><td>Причал</td><td>Рыба: еда без пашни (если рядом вода)</td><td>Всплески у причала, лодка</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="principles" style="margin-top: 2.5rem;">
+      <div class="principle"><h4>Нет двух одинаковых</h4><p class="muted">Ратуша может стоять на любой стороне площади, площадь бывает квадратной и восьмиугольной, улицы изгибаются, здания зеркалятся.</p></div>
+      <div class="principle"><h4>Слушают местность</h4><p class="muted">Улица, упирающаяся в воду или обрыв, не прокладывается. На крутых склонах и в воде участки не застраиваются, фундаменты подстраиваются под рельеф.</p></div>
+      <div class="principle"><h4>Строят из своего</h4><p class="muted">В тайге ель и камень, в саванне акация и глиняный кирпич, в вишнёвой роще вишня, в лесах тёмный дуб и чёрный камень.</p></div>
+      <div class="principle"><h4>Растут и перестраиваются</h4><p class="muted">Хижина расширяется до городского дома, шатёр становится замком, частокол форта — каменной стеной. Старое разбирается, новое строится на его месте.</p></div>
+      <div class="principle"><h4>Связаны дорогами</h4><p class="muted">Каждое поселение соединено дорогой с тем, из которого вышли его основатели; через реки перекинуты мостки. Мощение улучшается с ростом городов.</p></div>
+      <div class="principle"><h4>Не трогают ваше</h4><p class="muted">Город расчищает только природу: землю, траву, деревья. Постройки игрока остаются на месте.</p></div>
     </div>
   </div>
 </section>
@@ -744,8 +815,8 @@ footer { margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--line
       <div class="stage"><span class="num">1</span><div><h4>Каркас и ядро симуляции</h4><p>Проект Fabric, сохранение состояния мира, игровой день симуляции, летопись, конфиг, команда <code>/wb</code>.</p></div><span class="status done">готово</span></div>
       <div class="stage"><span class="num">2</span><div><h4>Экономика Нерис</h4><p>Население, ресурсы, производственные цепочки, строительство, ярусы поселений, эпохи, расширение. Первая версия работает, баланс ещё настраивается: сейчас королевство расширяется слишком быстро.</p></div><span class="status done">первая версия</span></div>
       <div class="stage"><span class="num">3</span><div><h4>Шахты Нерис</h4><p>Растущие шахты с тремя горизонтами, лавовыми каналами и кузней; охрана, статус преступника, метки собственности на добытом.</p></div><span class="status done">готово</span></div>
-      <div class="stage"><span class="num">4</span><div><h4>Остальные постройки</h4><p>Шаблоны домов, ферм, кузниц, фортов и замков Нерис, адский портал прибытия.</p></div><span class="status now">следующий шаг</span></div>
-      <div class="stage"><span class="num">5</span><div><h4>Существа Нерис</h4><p>Модели, текстуры и ИИ: жители, рабочие, стража, командиры.</p></div><span class="status next">дальше</span></div>
+      <div class="stage"><span class="num">4</span><div><h4>Города Нерис</h4><p>Ратуши по уровням и тронный зал столицы, 4 вида домов, 20 видов зданий с реальной ролью в экономике, производственные цепочки, дороги, стены, дозорные башни, летописи в библиотеках, работа днём.</p></div><span class="status done">готово</span></div>
+      <div class="stage"><span class="num">5</span><div><h4>Существа Нерис</h4><p>Модели, текстуры и ИИ: жители, рабочие, стража, командиры. Рабочие займут уже размеченные рабочие места в зданиях.</p></div><span class="status now">следующий шаг</span></div>
       <div class="stage"><span class="num">6</span><div><h4>Репутация и торговля</h4><p>Отношение к каждому игроку, законы на территории, торговцы, контракты.</p></div><span class="status next">дальше</span></div>
       <div class="stage"><span class="num">7</span><div><h4>Адская кампания</h4><p>Форпосты Нерис в Нижнем мире, война с адской фауной, незерит.</p></div><span class="status next">дальше</span></div>
       <div class="stage"><span class="num">8</span><div><h4>Каменты</h4><p>Пробуждение, каменоломни, стены, монументы, запрет на руду.</p></div><span class="status next">дальше</span></div>

@@ -20,8 +20,8 @@ import net.minecraft.world.gen.chunk.ChunkGenerator;
  */
 public final class LocationFinder {
 	private static final int ATTEMPTS = 48;
-	/** No two settlements of any faction may be closer than this. */
-	private static final int MIN_SETTLEMENT_SPACING = 128;
+	/** No two settlements of any faction may be closer than this; a walled castle town is 160 blocks across. */
+	private static final int MIN_SETTLEMENT_SPACING = 200;
 
 	private LocationFinder() {
 	}

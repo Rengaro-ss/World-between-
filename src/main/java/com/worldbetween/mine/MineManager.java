@@ -98,7 +98,11 @@ public final class MineManager {
 		ServerWorld world = server.getOverworld();
 		WorldBetweenState state = WorldBetweenState.get(server);
 		int[] budget = {BUDGET};
+		long deadline = System.nanoTime() + 10_000_000L;
 		for (Site site : sites(state)) {
+			if (System.nanoTime() > deadline) {
+				break;
+			}
 			int progress = site.progress(world);
 			for (Map.Entry<ChunkPos, Integer> entry : site.plan().chunks().entrySet()) {
 				ChunkPos pos = entry.getKey();

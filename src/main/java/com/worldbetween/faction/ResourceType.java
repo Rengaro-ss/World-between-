@@ -7,12 +7,26 @@ import net.minecraft.text.Text;
  * not items in chests.
  */
 public enum ResourceType {
+	/** Ready-to-eat food: bread, cooked meals, fish. */
 	FOOD("food"),
+	GRAIN("grain"),
+	FLOUR("flour"),
+	MEAT("meat"),
+	LOGS("logs"),
+	/** Sawn timber, the main building material. */
 	WOOD("wood"),
 	STONE("stone"),
+	BRICKS("bricks"),
 	ORE("ore"),
+	FUEL("fuel"),
 	METAL("metal"),
-	EQUIPMENT("equipment");
+	HIDES("hides"),
+	LEATHER("leather"),
+	WOOL("wool"),
+	CLOTH("cloth"),
+	EQUIPMENT("equipment"),
+	/** Gathered in libraries; needed to enter later eras. Never spoils or hits storage limits. */
+	KNOWLEDGE("knowledge");
 
 	private final String id;
 

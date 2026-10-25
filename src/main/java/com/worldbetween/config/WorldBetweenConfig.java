@@ -23,8 +23,8 @@ public class WorldBetweenConfig {
 	public int minArrivalDistance = 400;
 	public int maxArrivalDistance = 900;
 	/** New settlements are founded this far from their parent, in blocks. */
-	public int minExpansionDistance = 160;
-	public int maxExpansionDistance = 320;
+	public int minExpansionDistance = 220;
+	public int maxExpansionDistance = 380;
 	/** Mine tunnel each staffed mine digs per day, in blocks. */
 	public int mineStepsPerDay = 8;
 	/** Time the guards give a noticed stranger to leave a mine, in seconds. */

@@ -70,6 +70,7 @@ public final class WorldBetweenCommand {
 										.executes(context -> mineMap(context, 32))
 										.then(CommandManager.argument("radius", IntegerArgumentType.integer(4, 64))
 												.executes(context -> mineMap(context, IntegerArgumentType.getInteger(context, "radius")))))))
+				.then(CommandManager.literal("town").executes(WorldBetweenCommand::town))
 				.then(CommandManager.literal("arrive")
 						.requires(source -> source.hasPermissionLevel(2))
 						.then(CommandManager.argument("faction", StringArgumentType.word())
@@ -252,6 +253,50 @@ public final class WorldBetweenCommand {
 		if (floor.isOf(Blocks.WATER)) return 'w';
 		if (floor.isAir() || floor.isOf(Blocks.CAVE_AIR)) return head.isAir() ? '.' : ',';
 		return ' ';
+	}
+
+	private static int town(CommandContext<ServerCommandSource> context) {
+		Vec3d from = context.getSource().getPosition();
+		WorldBetweenState state = WorldBetweenState.get(context.getSource().getServer());
+		Faction owner = null;
+		Settlement nearest = null;
+		for (Faction faction : state.factions()) {
+			for (Settlement settlement : faction.settlements()) {
+				if (nearest == null || settlement.pos().getSquaredDistance(from) < nearest.pos().getSquaredDistance(from)) {
+					nearest = settlement;
+					owner = faction;
+				}
+			}
+		}
+		if (nearest == null) {
+			context.getSource().sendError(Text.translatable("command.worldbetween.town.none"));
+			return 0;
+		}
+		ServerWorld world = context.getSource().getServer().getOverworld();
+		com.worldbetween.town.TownLayout layout = com.worldbetween.town.TownLayout.of(world, nearest);
+		BlockPos center = layout.center();
+		send(context, Text.literal(nearest.name()).formatted(Formatting.GOLD).append(" ")
+				.append(Text.translatable("tier.worldbetween." + owner.type().id() + "." + nearest.tier()))
+				.append(Text.translatable("command.worldbetween.town.summary", nearest.population(), center.getX(), center.getY(), center.getZ(),
+						layout.streets().size(), layout.hallSide().asString())));
+		for (com.worldbetween.faction.Plot plot : nearest.plots()) {
+			com.worldbetween.town.TownLayout.Slot slot = layout.slot(plot.slot());
+			if (slot == null) {
+				continue;
+			}
+			send(context, Text.literal(" ▪ ").append(plot.type().displayName())
+					.append(Text.literal(" L" + plot.level() + " (" + slot.x() + ", " + slot.z() + ")"
+							+ (slot.buildable() ? "" : " ✗")).formatted(Formatting.GRAY)));
+		}
+		MutableText crews = Text.translatable("command.worldbetween.town.crews");
+		for (Map.Entry<BuildingType, Integer> entry : nearest.staffed().entrySet()) {
+			int built = nearest.buildingCount(entry.getKey());
+			if (built > 0) {
+				crews.append(" ").append(entry.getKey().displayName()).append(" " + entry.getValue() + "/" + built);
+			}
+		}
+		send(context, crews);
+		return 1;
 	}
 
 	private static FactionType factionArgument(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
