@@ -44,6 +44,8 @@ public final class WarPresence {
 	private static final int INTERVAL = 20;
 	private static final double MEET = 96;
 	private static final double LEAVE = 140;
+	/** Which of a kingdom's or a mountain band's people is its builder. */
+	private static final int BUILDER = 1;
 	/** A fight is over when nobody has fallen for this long. */
 	private static final int QUIET_TICKS = 600;
 	private static final KamentMaterial[] STONES = {KamentMaterial.STONE, KamentMaterial.ANDESITE, KamentMaterial.GRANITE, KamentMaterial.DIORITE};
@@ -151,6 +153,9 @@ public final class WarPresence {
 		// An enemy band in sight: they close in on it rather than keep to their road.
 		BlockPos enemy = band.state() == Warband.State.RETURNING ? null : enemyNear(world, state, band, leader.getBlockPos());
 		for (MobEntity member : members) {
+			if (isBuilder(member)) {
+				Trailwork.lay(world, band.faction(), member, band.state() == Warband.State.WAITING ? ground : band.position(now + 0.02));
+			}
 			if (member.getTarget() != null) {
 				continue;
 			}
@@ -169,6 +174,11 @@ public final class WarPresence {
 		if (members.size() < wanted && world.getServer().getTicks() % 40 == 0) {
 			spawn(world, state, band, ground, NEXT_SLOT.merge(band.id(), 1, Integer::sum) + band.kind().shown());
 		}
+	}
+
+	private static boolean isBuilder(MobEntity member) {
+		return (member instanceof NerisEntity neris && neris.role() == NerisRole.WORKER)
+				|| (member instanceof KamentEntity kament && kament.role() == KamentRole.WORKER);
 	}
 
 	/** Where the nearest enemy fighter in the open is, within reach of the band, if any. */
@@ -224,7 +234,11 @@ public final class WarPresence {
 		MobEntity mob = switch (band.faction()) {
 			case NERIS -> {
 				NerisEntity soldier = WorldBetweenEntities.NERIS.create(world);
-				if (soldier != null) {
+				if (soldier != null && index == BUILDER) {
+					soldier.setRole(NerisRole.WORKER);
+					soldier.setTool(net.minecraft.item.Items.IRON_SHOVEL);
+					soldier.setSpeech("speech.worldbetween.war.builder.neris");
+				} else if (soldier != null) {
 					soldier.setRole(NerisRole.GUARD);
 					soldier.setArcher(index % 3 == 2); // every third of them a bowman
 					soldier.setSpeech("speech.worldbetween.war.neris." + band.kind().id());
@@ -233,7 +247,11 @@ public final class WarPresence {
 			}
 			case KAMENT -> {
 				KamentEntity kament = WorldBetweenEntities.KAMENT.create(world);
-				if (kament != null) {
+				if (kament != null && index == BUILDER) {
+					kament.setRole(KamentRole.WORKER);
+					kament.setMaterial(KamentMaterial.STONE);
+					kament.setSpeech("speech.worldbetween.war.builder.kament");
+				} else if (kament != null) {
 					kament.setRole(KamentRole.GUARD);
 					kament.setMaterial(STONES[(band.id() + index) % STONES.length]);
 					kament.setSpeech("speech.worldbetween.war.kament." + band.kind().id());

@@ -303,6 +303,11 @@ public class Faction {
 		return true;
 	}
 
+	/** The day an event last happened, or null. */
+	public Long lastEvent(String event) {
+		return lastEventDays.get(event);
+	}
+
 	public boolean hasEventHappened(String event) {
 		return lastEventDays.containsKey(event);
 	}

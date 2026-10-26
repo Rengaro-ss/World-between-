@@ -28,7 +28,9 @@ public class WorldBetweenState extends PersistentState {
 	/** The overworld day number at which the last simulation step happened, or -1 if never. */
 	private long lastWorldDay = -1;
 	/** World time (ticks of the sun) at which day 0 of the history began; -1 until the first run. */
-	private long startTick = -1;
+	/** The world time history began at; may well be negative once the time has been set back. */
+	public static final long UNSET = Long.MIN_VALUE;
+	private long startTick = UNSET;
 	private final EnumMap<FactionType, Faction> factions = new EnumMap<>(FactionType.class);
 	private final List<ChronicleEntry> chronicle = new ArrayList<>();
 	private com.worldbetween.war.WarState wars = new com.worldbetween.war.WarState();
@@ -113,7 +115,7 @@ public class WorldBetweenState extends PersistentState {
 		WorldBetweenState state = new WorldBetweenState();
 		state.day = nbt.getLong("Day");
 		state.lastWorldDay = nbt.contains("LastWorldDay") ? nbt.getLong("LastWorldDay") : -1;
-		state.startTick = nbt.contains("StartTick") ? nbt.getLong("StartTick") : -1;
+		state.startTick = nbt.contains("StartTick") ? nbt.getLong("StartTick") : UNSET;
 		NbtCompound factionsNbt = nbt.getCompound("Factions");
 		for (FactionType type : FactionType.values()) {
 			if (factionsNbt.contains(type.id())) {

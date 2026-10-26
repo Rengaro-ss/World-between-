@@ -208,6 +208,10 @@ public final class WarSimulation {
 			band.setBeasts(beasts);
 		}
 		wars.bands().add(band);
+		if (side.type() == FactionType.NERIS || side.type() == FactionType.KAMENT) {
+			// Their builder goes with them, and leaves a way behind.
+			wars.addTrail(side.type(), home.pos(), to, kind.isArmy() ? 2 : 1, context.day());
+		}
 		return band;
 	}
 

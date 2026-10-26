@@ -34,6 +34,7 @@ public final class WarCommand {
 		return CommandManager.literal("war").executes(WarCommand::status)
 				.then(CommandManager.literal("bands").executes(WarCommand::bands))
 				.then(CommandManager.literal("fields").executes(WarCommand::fields))
+				.then(CommandManager.literal("trails").executes(WarCommand::trails))
 				.then(CommandManager.literal("set").requires(source -> source.hasPermissionLevel(2))
 						.then(faction("a").then(faction("b").then(CommandManager.argument("level", IntegerArgumentType.integer(1, War.MAX_LEVEL))
 								.executes(WarCommand::set)))))
@@ -104,6 +105,16 @@ public final class WarCommand {
 					.append(" " + field.fallenB() + " (" + field.pos().getX() + ", " + field.pos().getZ() + ")").formatted(Formatting.GRAY));
 		}
 		return fields.size();
+	}
+
+	private static int trails(CommandContext<ServerCommandSource> context) {
+		List<com.worldbetween.war.Trail> trails = WorldBetweenState.get(context.getSource().getServer()).wars().trails();
+		for (com.worldbetween.war.Trail trail : trails.subList(Math.max(0, trails.size() - 12), trails.size())) {
+			send(context, Text.literal(" ▪ #" + trail.id() + " ").append(trail.faction().displayName())
+					.append(" (" + trail.from().getX() + ", " + trail.from().getZ() + ") → (" + trail.to().getX() + ", " + trail.to().getZ() + ")")
+					.formatted(Formatting.GRAY));
+		}
+		return trails.size();
 	}
 
 	private static int set(CommandContext<ServerCommandSource> context) {

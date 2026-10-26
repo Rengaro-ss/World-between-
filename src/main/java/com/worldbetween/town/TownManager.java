@@ -47,7 +47,9 @@ public final class TownManager {
 		int[] budget = {BUDGET};
 		long deadline = System.nanoTime() + TIME_BUDGET_NANOS;
 		boolean books = server.getTicks() % BOOK_INTERVAL == 0;
-		for (TownFeatures.Feature field : com.worldbetween.war.BattlefieldFeatures.of(world)) {
+		List<TownFeatures.Feature> traces = new java.util.ArrayList<>(com.worldbetween.war.BattlefieldFeatures.of(world));
+		traces.addAll(com.worldbetween.war.TrailFeatures.of(world));
+		for (TownFeatures.Feature field : traces) {
 			if (budget[0] <= 0 || System.nanoTime() > deadline) {
 				return;
 			}

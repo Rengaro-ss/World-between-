@@ -18,6 +18,8 @@ public class WarState {
 	private final Map<String, War> wars = new LinkedHashMap<>();
 	private final List<Warband> bands = new ArrayList<>();
 	private final List<Battlefield> fields = new ArrayList<>();
+	private final List<Trail> trails = new ArrayList<>();
+	private int nextTrail;
 	private int nextBand;
 	private int nextField;
 
@@ -76,6 +78,26 @@ public class WarState {
 		return field;
 	}
 
+	public List<Trail> trails() {
+		return trails;
+	}
+
+	/** Old trails are forgotten (what was built of them stays) once there are more than this. */
+	private static final int MAX_TRAILS = 80;
+
+	/** A party's way, unless one of its people already went the same way not long ago. */
+	public void addTrail(FactionType faction, net.minecraft.util.math.BlockPos from, net.minecraft.util.math.BlockPos to, int width, long day) {
+		for (Trail trail : trails) {
+			if (trail.faction() == faction && trail.from().getSquaredDistance(from.withY(0)) < 40 * 40 && trail.to().getSquaredDistance(to.withY(0)) < 60 * 60) {
+				return;
+			}
+		}
+		trails.add(new Trail(nextTrail++, faction, from.withY(0), to.withY(0), width, day));
+		if (trails.size() > MAX_TRAILS) {
+			trails.remove(0);
+		}
+	}
+
 	public NbtCompound toNbt() {
 		NbtCompound nbt = new NbtCompound();
 		NbtList warList = new NbtList();
@@ -87,6 +109,10 @@ public class WarState {
 		NbtList fieldList = new NbtList();
 		fields.forEach(field -> fieldList.add(field.toNbt()));
 		nbt.put("Fields", fieldList);
+		NbtList trailList = new NbtList();
+		trails.forEach(trail -> trailList.add(trail.toNbt()));
+		nbt.put("Trails", trailList);
+		nbt.putInt("NextTrail", nextTrail);
 		nbt.putInt("NextBand", nextBand);
 		nbt.putInt("NextField", nextField);
 		return nbt;
@@ -115,6 +141,14 @@ public class WarState {
 				state.fields.add(field);
 			}
 		}
+		NbtList trailList = nbt.getList("Trails", NbtElement.COMPOUND_TYPE);
+		for (int i = 0; i < trailList.size(); i++) {
+			Trail trail = Trail.fromNbt(trailList.getCompound(i));
+			if (trail != null) {
+				state.trails.add(trail);
+			}
+		}
+		state.nextTrail = nbt.getInt("NextTrail");
 		state.nextBand = nbt.getInt("NextBand");
 		state.nextField = nbt.getInt("NextField");
 		return state;

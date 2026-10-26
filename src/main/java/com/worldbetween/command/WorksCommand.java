@@ -43,8 +43,23 @@ public final class WorksCommand {
 				.then(CommandManager.literal("morok").requires(source -> source.hasPermissionLevel(2)).executes(WorksCommand::morok))
 				.then(CommandManager.literal("quake").requires(source -> source.hasPermissionLevel(2)).executes(context -> strike(context, true)))
 				.then(CommandManager.literal("storm").requires(source -> source.hasPermissionLevel(2)).executes(context -> strike(context, false)))
+				.then(CommandManager.literal("visit").requires(source -> source.hasPermissionLevel(2))
+						.then(CommandManager.argument("people", StringArgumentType.word())
+								.suggests((context, builder) -> CommandSource.suggestMatching(Arrays.stream(FactionType.values()).map(FactionType::id), builder))
+								.then(CommandManager.argument("errand", StringArgumentType.word())
+										.suggests((context, builder) -> CommandSource.suggestMatching(Arrays.stream(com.worldbetween.visit.Visits.Kind.values()).map(com.worldbetween.visit.Visits.Kind::id), builder))
+										.executes(WorksCommand::visit))))
 				.then(CommandManager.literal("damage").requires(source -> source.hasPermissionLevel(2))
 						.then(CommandManager.argument("amount", IntegerArgumentType.integer(0, 90)).executes(WorksCommand::damage)));
+	}
+
+	private static int visit(CommandContext<ServerCommandSource> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+		FactionType type = FactionType.byId(StringArgumentType.getString(context, "people"));
+		com.worldbetween.visit.Visits.Kind kind = com.worldbetween.visit.Visits.Kind.byId(StringArgumentType.getString(context, "errand"));
+		if (type == null || kind == null) {
+			return 0;
+		}
+		return com.worldbetween.visit.Visits.force(context.getSource().getPlayerOrThrow(), type, kind) ? 1 : 0;
 	}
 
 	private static int status(CommandContext<ServerCommandSource> context) {

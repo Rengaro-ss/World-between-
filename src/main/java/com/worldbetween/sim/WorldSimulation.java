@@ -25,7 +25,7 @@ public final class WorldSimulation {
 		WorldBetweenState state = WorldBetweenState.get(server);
 		long time = server.getOverworld().getTimeOfDay();
 		double pace = Clock.pace();
-		if (state.startTick() < 0) {
+		if (state.startTick() == WorldBetweenState.UNSET) {
 			// First run in this world (or a save from before there were two clocks): history starts now.
 			state.setStartTick(time - (long) (state.day() * Clock.TICKS_PER_DAY / pace));
 			return;
