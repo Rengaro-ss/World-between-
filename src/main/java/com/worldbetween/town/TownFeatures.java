@@ -114,6 +114,27 @@ public final class TownFeatures {
 		return new Feature(key, version, null, structure, null, null, history);
 	}
 
+	/**
+	 * A structure as war has left it: {@code level} 0 is whole, 1 to 3 more and more broken. A damaged
+	 * version is numbered below zero, so the builder takes the whole one down and puts the broken one up,
+	 * and back again once it is mended. Lines (streets, roads) are not damaged.
+	 */
+	public static Feature damageable(Feature base, int level) {
+		if (!base.isStructure()) {
+			return base;
+		}
+		int version = level <= 0 ? base.version : -(base.version * 4 + level) - 1;
+		IntFunction<Canvas> structure = base.structure;
+		String key = base.key;
+		return new Feature(base.key, version, base.type, v -> {
+			if (v >= 0) {
+				return structure.apply(v);
+			}
+			int code = -v - 1;
+			return Damage.broken(structure.apply(code / 4), code % 4, key);
+		}, null, null, base.history);
+	}
+
 	public static int[] versionsUpTo(int max) {
 		return upTo(max);
 	}

@@ -135,6 +135,7 @@ public class ArkiBehavior implements FactionBehavior {
 					colony.addCounter(comet.resource(), comet.amount());
 				}
 			}
+			case STRIKE -> com.worldbetween.war.Weapons.cometStrike(context, comet);
 		}
 	}
 
@@ -153,7 +154,9 @@ public class ArkiBehavior implements FactionBehavior {
 		available -= observatory;
 		colony.addCounter(Arkis.AMETHYST, garden * 4L);
 		// Starlight only comes by night, and with the moon.
-		colony.addCounter(Arkis.STARLIGHT, Math.round(lens * 9 * Arkis.moonlight(day) * (Arkis.isSky(colony) ? 1.5f : 1f)));
+		// Under the Eternal Night every night is the darkest, and the lenses drink deeper.
+		float night = com.worldbetween.faction.projects.WorksFeatures.working(faction, com.worldbetween.faction.projects.Project.NIGHT_TOWER) ? 1.5f : 1f;
+		colony.addCounter(Arkis.STARLIGHT, Math.round(lens * 9 * Arkis.moonlight(day) * (Arkis.isSky(colony) ? 1.5f : 1f) * night));
 		colony.addCounter(Arkis.SEA_GOODS, sea * 5L);
 		// The observatory only reads what is spare: enough starlight is always kept back to call a comet.
 		long spent = Math.max(0, Math.min(colony.counter(Arkis.STARLIGHT) - CALL_STARLIGHT * 2L, observatory * 3L));

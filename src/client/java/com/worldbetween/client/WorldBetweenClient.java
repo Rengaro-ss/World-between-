@@ -17,6 +17,11 @@ public class WorldBetweenClient implements ClientModInitializer {
 		EntityRendererRegistry.register(WorldBetweenEntities.KAMENT, KamentRenderer::new);
 		net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(ArkiModel.LAYER, ArkiModel::getTexturedModelData);
 		EntityRendererRegistry.register(WorldBetweenEntities.ARKI, ArkiRenderer::new);
+		net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(ManticoreModel.LAYER, ManticoreModel::getTexturedModelData);
+		EntityRendererRegistry.register(WorldBetweenEntities.MANTICORE, ManticoreRenderer::new);
+		EntityRendererRegistry.register(WorldBetweenEntities.MOROK, MorokRenderer::new);
+		net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(StoneHoundModel.LAYER, StoneHoundModel::getTexturedModelData);
+		EntityRendererRegistry.register(WorldBetweenEntities.STONE_HOUND, StoneHoundRenderer::new);
 		EntityRendererRegistry.register(WorldBetweenEntities.ARKI_ORB, net.minecraft.client.render.entity.EmptyEntityRenderer::new);
 		ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
 			FactionType owner = Ownership.ownerOf(stack);

@@ -53,6 +53,9 @@ public class Warband {
 		MARCHING, WAITING, RETURNING
 	}
 
+	/** Home of a band set down by hand for a test: its survivors go back to nobody. */
+	public static final int TEST = -2;
+
 	private final int id;
 	private final FactionType faction;
 	private final Kind kind;
@@ -72,6 +75,8 @@ public class Warband {
 	/** Day this band last fought in person, so the simulation does not fight the same fight again. */
 	private long foughtLive = -1;
 	private boolean sabotaged;
+	/** Manticores with their riders, the kingdom's beasts of war. */
+	private int beasts;
 
 	public Warband(int id, FactionType faction, Kind kind, int home, BlockPos homePos, FactionType enemy, int target,
 			BlockPos to, int fighters, double now) {
@@ -150,6 +155,14 @@ public class Warband {
 
 	public void setFoughtLive(long day) {
 		this.foughtLive = day;
+	}
+
+	public int beasts() {
+		return beasts;
+	}
+
+	public void setBeasts(int beasts) {
+		this.beasts = Math.max(0, beasts);
 	}
 
 	public boolean hasSabotaged() {
@@ -253,6 +266,7 @@ public class Warband {
 		nbt.putInt("Opponent", opponent);
 		nbt.putLong("FoughtLive", foughtLive);
 		nbt.putBoolean("Sabotaged", sabotaged);
+		nbt.putInt("Beasts", beasts);
 		return nbt;
 	}
 
@@ -278,6 +292,7 @@ public class Warband {
 		band.opponent = nbt.getInt("Opponent");
 		band.foughtLive = nbt.getLong("FoughtLive");
 		band.sabotaged = nbt.getBoolean("Sabotaged");
+		band.beasts = nbt.getInt("Beasts");
 		return band;
 	}
 }

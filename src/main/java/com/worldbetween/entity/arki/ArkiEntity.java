@@ -112,9 +112,9 @@ public class ArkiEntity extends PathAwareEntity implements Stall.Keeper, Faction
 
 	public void setRole(ArkiRole role) {
 		dataTracker.set(ROLE, role.ordinal());
-		double health = role == ArkiRole.KEEPER ? 42 : 30;
+		double health = role == ArkiRole.KEEPER ? 48 : 34;
 		getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(health);
-		getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(role == ArkiRole.KEEPER ? 6.5 : 5);
+		getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(role == ArkiRole.KEEPER ? 7 : 5.5);
 		setHealth((float) health);
 	}
 
@@ -359,7 +359,7 @@ public class ArkiEntity extends PathAwareEntity implements Stall.Keeper, Faction
 		ArkiOrbEntity orb = new ArkiOrbEntity(WorldBetweenEntities.ARKI_ORB, getWorld());
 		orb.setOwner(this);
 		orb.setTarget(target);
-		orb.setDamage(4f * power());
+		orb.setDamage(5f * power());
 		Vec3d from = getPos().add((random.nextDouble() - 0.5) * 0.8, getHeight() * 0.7, (random.nextDouble() - 0.5) * 0.8);
 		orb.refreshPositionAndAngles(from.x, from.y, from.z, 0, 0);
 		Vec3d toward = target.getPos().add(0, target.getHeight() * 0.5, 0).subtract(from).normalize();
@@ -434,8 +434,14 @@ public class ArkiEntity extends PathAwareEntity implements Stall.Keeper, Faction
 				if (distance <= BLADE_REACH && sees) {
 					blade(target);
 					bladeCooldown = 60 + random.nextInt(21); // three to four seconds for the light to gather again
+					Vec3d away = getPos().subtract(target.getPos()).multiply(1, 0, 1).normalize().multiply(7);
+					Vec3d back = target.getPos().add(away).add(0, 2, 0);
+					getNavigation().startMovingTo(back.x, back.y, back.z, 1.5);
 				} else if (age % 5 == 0) {
-					getNavigation().startMovingTo(target.getX(), target.getY() + 1, target.getZ(), 1.4);
+					// In to the blade's reach and no further: a fist or a sword reaches less far.
+					Vec3d from = target.getPos().add(0, target.getHeight() * 0.6, 0);
+					Vec3d to = from.add(getPos().subtract(from).normalize().multiply(2.7));
+					getNavigation().startMovingTo(to.x, to.y, to.z, 1.4);
 				}
 				return;
 			}

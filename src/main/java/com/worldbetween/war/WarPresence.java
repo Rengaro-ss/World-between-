@@ -72,8 +72,19 @@ public final class WarPresence {
 	private WarPresence() {
 	}
 
+	/** Folk of the peoples that others bring into the world for the war (builders, riders, purge squads). */
+	private static final Set<UUID> ADOPTED = new HashSet<>();
+
 	public static boolean isManaged(UUID id) {
-		return MEMBERS.containsKey(id);
+		return MEMBERS.containsKey(id) || ADOPTED.contains(id);
+	}
+
+	public static void adopt(UUID id) {
+		ADOPTED.add(id);
+	}
+
+	public static void release(UUID id) {
+		ADOPTED.remove(id);
 	}
 
 	public static void onServerTick(MinecraftServer server) {
@@ -121,6 +132,9 @@ public final class WarPresence {
 			int count = Math.min(band.kind().shown(), band.fighters());
 			for (int i = 0; i < count; i++) {
 				spawn(world, state, band, ground, i);
+			}
+			for (int i = 0; i < Math.min(2, band.beasts()); i++) {
+				spawnBeast(world, band, ground, i);
 			}
 			return;
 		}
@@ -190,6 +204,11 @@ public final class WarPresence {
 			if (waiting) {
 				arki.setAnchor(to.up(4), 6);
 			}
+		} else if (member instanceof com.worldbetween.entity.ManticoreEntity beast) {
+			beast.setDestination(waiting ? null : to.up(10));
+			if (waiting) {
+				beast.setAnchor(to.up(8), 10);
+			}
 		}
 	}
 
@@ -247,6 +266,53 @@ public final class WarPresence {
 		world.spawnEntity(mob);
 		SLOTS.put(slot, mob.getUuid());
 		MEMBERS.put(mob.getUuid(), bandId);
+	}
+
+	/** A manticore of the band with a seeker on its back, bow in hand. */
+	private static void spawnBeast(ServerWorld world, Warband band, BlockPos at, int index) {
+		com.worldbetween.entity.ManticoreEntity beast = WorldBetweenEntities.MANTICORE.create(world);
+		NerisEntity rider = WorldBetweenEntities.NERIS.create(world);
+		if (beast == null || rider == null) {
+			return;
+		}
+		BlockPos pos = at.up(8).east(index * 4);
+		beast.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, world.random.nextFloat() * 360f, 0);
+		rider.setRole(NerisRole.SEEKER);
+		rider.setArcher(true);
+		rider.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + 1.5, pos.getZ() + 0.5, beast.getYaw(), 0);
+		rider.setSpeech("speech.worldbetween.war.neris.rider");
+		String slot = band.id() + ":b" + index;
+		String riderSlot = band.id() + ":r" + index;
+		int bandId = band.id();
+		beast.setOnDeath(source -> {
+			UUID id = SLOTS.remove(slot);
+			if (id != null) {
+				MEMBERS.remove(id);
+			}
+			WorldBetweenState state = WorldBetweenState.get(world.getServer());
+			Warband owner = state.wars().band(bandId);
+			if (owner != null) {
+				owner.setBeasts(owner.beasts() - 1);
+				Fight fight = fightAt(beast.getBlockPos(), world.getServer().getTicks());
+				fight.fallen.merge(FactionType.NERIS, 1, Integer::sum);
+				fight.bandsAtStart.putIfAbsent(owner.id(), owner.fighters());
+				state.markDirty();
+			}
+		});
+		rider.setOnDeath(source -> {
+			UUID id = SLOTS.remove(riderSlot);
+			if (id != null) {
+				MEMBERS.remove(id);
+				COUNTED.add(id);
+			}
+		});
+		world.spawnEntity(beast);
+		world.spawnEntity(rider);
+		rider.startRiding(beast, true);
+		SLOTS.put(slot, beast.getUuid());
+		MEMBERS.put(beast.getUuid(), bandId);
+		SLOTS.put(riderSlot, rider.getUuid());
+		MEMBERS.put(rider.getUuid(), bandId);
 	}
 
 	/** One of a band has fallen in person: the band is one fewer, and the fight is remembered. */

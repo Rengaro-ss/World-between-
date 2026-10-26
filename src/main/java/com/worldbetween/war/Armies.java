@@ -24,8 +24,16 @@ public final class Armies {
 		return switch (faction.type()) {
 			case NERIS -> 1.0 + 0.25 * faction.era();
 			case KAMENT -> 2.6;
-			case ARKI -> 1.7 * (1 + 0.15 * faction.era());
+			case ARKI -> 2.1 * (1 + 0.15 * faction.era());
 		};
+	}
+
+	/** What a manticore with its rider is worth: a handful of soldiers, and from the air. */
+	public static final double MANTICORE = 7;
+
+	/** What a whole band is worth in a fight, beasts and all. */
+	public static double strength(Faction faction, Warband band) {
+		return band.fighters() * unit(faction) + band.beasts() * MANTICORE;
 	}
 
 	/** How many fighters the people could send out in all. */
@@ -38,7 +46,7 @@ public final class Armies {
 
 	/** What a people could throw into a war, all told. */
 	public static double power(Faction faction) {
-		return pool(faction) * unit(faction) + faction.totalPopulation() * 0.05;
+		return pool(faction) * unit(faction) + faction.totalPopulation() * 0.05 + faction.counter("manticores") * MANTICORE;
 	}
 
 	/** Kaments and Arki take fighters from a town's own people, and leave at least three at home. */
@@ -73,8 +81,12 @@ public final class Armies {
 
 	/** Survivors come home. */
 	public static void disband(Faction faction, Warband band) {
+		if (band.home() == Warband.TEST) {
+			return;
+		}
 		if (faction.type() == FactionType.NERIS) {
 			faction.setSoldiers(faction.soldiers() + band.fighters());
+			faction.addCounter("manticores", band.beasts());
 			return;
 		}
 		Settlement home = settlement(faction, band.home());

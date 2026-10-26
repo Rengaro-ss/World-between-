@@ -38,7 +38,12 @@ public final class WarCommand {
 						.then(faction("a").then(faction("b").then(CommandManager.argument("level", IntegerArgumentType.integer(1, War.MAX_LEVEL))
 								.executes(WarCommand::set)))))
 				.then(CommandManager.literal("clash").requires(source -> source.hasPermissionLevel(2))
-						.then(faction("a").then(faction("b").executes(WarCommand::clash))))
+						.then(faction("a").then(faction("b").executes(context -> clash(context, 4, 4))
+								.then(CommandManager.argument("na", IntegerArgumentType.integer(1, 40))
+										.then(CommandManager.argument("nb", IntegerArgumentType.integer(1, 40))
+												.executes(context -> clash(context, IntegerArgumentType.getInteger(context, "na"),
+														IntegerArgumentType.getInteger(context, "nb"))))))))
+				.then(CommandManager.literal("clear").requires(source -> source.hasPermissionLevel(2)).executes(WarCommand::clear))
 				.then(CommandManager.literal("field").requires(source -> source.hasPermissionLevel(2))
 						.then(faction("a").then(faction("b").then(CommandManager.argument("fallen", IntegerArgumentType.integer(1, 60))
 								.executes(WarCommand::field)))));
@@ -118,7 +123,16 @@ public final class WarCommand {
 	}
 
 	/** Two hostile patrols, waiting thirty blocks apart either side of the player. */
-	private static int clash(CommandContext<ServerCommandSource> context) {
+	private static int clear(CommandContext<ServerCommandSource> context) {
+		WorldBetweenState state = WorldBetweenState.get(context.getSource().getServer());
+		int count = state.wars().bands().size();
+		state.wars().bands().clear();
+		state.markDirty();
+		send(context, Text.literal("Bands cleared: " + count));
+		return count;
+	}
+
+	private static int clash(CommandContext<ServerCommandSource> context, int na, int nb) {
 		FactionType a = type(context, "a");
 		FactionType b = type(context, "b");
 		if (a == null || b == null || a == b) {
@@ -130,21 +144,23 @@ public final class WarCommand {
 			state.wars().war(a, b).setLevel(1, state.day());
 		}
 		double now = state.day() + (context.getSource().getServer().getOverworld().getTimeOfDay() % 24000L) / 24000.0;
-		place(state, a, b, here.add(-15, 0, 0), now);
-		place(state, b, a, here.add(15, 0, 0), now);
+		int first = place(state, a, b, here.add(-15, 0, 0), now, na);
+		int second = place(state, b, a, here.add(15, 0, 0), now, nb);
 		state.markDirty();
-		send(context, Text.translatable("command.worldbetween.war.clash"));
+		send(context, Text.translatable("command.worldbetween.war.clash").append(" #" + first + " #" + second));
 		return 1;
 	}
 
-	private static void place(WorldBetweenState state, FactionType side, FactionType enemy, BlockPos at, double now) {
-		Faction faction = state.faction(side);
-		Settlement home = faction.settlements().stream().min(Comparator.comparingDouble(s -> s.pos().getSquaredDistance(at))).orElse(null);
-		BlockPos homePos = home != null ? home.pos() : at;
-		Warband band = new Warband(state.wars().nextBandId(), side, Warband.Kind.PATROL, home != null ? home.id() : -1, homePos, enemy, -1,
-				at, 4, now);
+	/** A test band: it belongs to no town, so whoever survives is not added to anyone's people. */
+	private static int place(WorldBetweenState state, FactionType side, FactionType enemy, BlockPos at, double now, int fighters) {
+		Warband band = new Warband(state.wars().nextBandId(), side, fighters > 4 ? Warband.Kind.ARMY : Warband.Kind.PATROL, Warband.TEST,
+				at, enemy, -1, at, fighters, now);
 		band.stationAt(at, (long) now + 1);
+		if (side == FactionType.NERIS) {
+			band.setBeasts((int) Math.min(2, state.faction(side).counter("manticores")));
+		}
 		state.wars().bands().add(band);
+		return band.id();
 	}
 
 	private static int field(CommandContext<ServerCommandSource> context) {

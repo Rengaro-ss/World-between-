@@ -56,6 +56,9 @@ public final class WorldBetweenItems {
 	public static final Item BLANK_AMULET = item("blank_amulet", new Item(new Item.Settings().maxCount(1)));
 	public static final Item STONE_AMULET = item("stone_amulet", new StoneAmuletItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)));
 
+	/** The king's writ: whoever carries it goes into the Nether on the kingdom's business, and its purge squads let them be. */
+	public static final Item ROYAL_WRIT = item("royal_writ", new Item(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)));
+
 	public static final ToolMaterial GRANITE = new StoneMaterial(300, 6.5f, 2f, BlockTags.INCORRECT_FOR_IRON_TOOL, 12, () -> Ingredient.ofItems(HEWN_GRANITE));
 	public static final ToolMaterial MONOLITH = new StoneMaterial(1400, 7.5f, 3f, BlockTags.INCORRECT_FOR_DIAMOND_TOOL, 14, () -> Ingredient.ofItems(DEEP_MONOLITH));
 

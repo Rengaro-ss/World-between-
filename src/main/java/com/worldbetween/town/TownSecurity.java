@@ -397,6 +397,13 @@ public final class TownSecurity {
 				.append(Text.literal(": ").formatted(Formatting.GRAY))
 				.append(Text.translatable("speech.worldbetween." + (king ? "king" : "baron") + ".audience." + lord.ambition().id(),
 						player.getName()).formatted(Formatting.WHITE)), false);
+		// While the kingdom wars in the Nether, the king gives a friend his writ: the purge squads will let them be.
+		if (king && com.worldbetween.faction.projects.Projects.done(faction, com.worldbetween.faction.projects.Project.HELL_CAMPAIGN)
+				&& faction.reputation(player.getUuid()) >= 30
+				&& !player.getInventory().contains(new net.minecraft.item.ItemStack(com.worldbetween.item.WorldBetweenItems.ROYAL_WRIT))) {
+			player.giveItemStack(new net.minecraft.item.ItemStack(com.worldbetween.item.WorldBetweenItems.ROYAL_WRIT));
+			player.sendMessage(Text.translatable("message.worldbetween.hell.writ_given").formatted(Formatting.GOLD), false);
+		}
 		if (king && !faction.hasEventHappened("audience_ever_" + player.getUuid())) {
 			faction.tryEvent("audience_ever_" + player.getUuid(), day, Long.MAX_VALUE);
 			faction.changeReputation(player.getUuid(), 5);

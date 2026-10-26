@@ -80,6 +80,8 @@ public class NerisEntity extends PathAwareEntity implements Merchant, FactionMem
 
 	/** Bowmen keep their distance and shoot; everyone else closes in with the blade. */
 	private boolean archer;
+	/** A purge squad in the Nether: everything alive that is not the kingdom's is fair game. */
+	private boolean purge;
 
 	public NerisEntity(EntityType<? extends PathAwareEntity> type, World world) {
 		super(type, world);
@@ -112,7 +114,7 @@ public class NerisEntity extends PathAwareEntity implements Merchant, FactionMem
 		}
 		switch (role) {
 			case GUARD -> {
-				attribute(48, 6, 0.3);
+				attribute(48, 4, 0.3);
 				equip(EquipmentSlot.MAINHAND, Items.IRON_SWORD);
 				equip(EquipmentSlot.HEAD, Items.IRON_HELMET);
 				equip(EquipmentSlot.CHEST, Items.IRON_CHESTPLATE);
@@ -140,6 +142,22 @@ public class NerisEntity extends PathAwareEntity implements Merchant, FactionMem
 
 	public boolean isArcher() {
 		return archer;
+	}
+
+	public void setPurge(boolean purge) {
+		this.purge = purge;
+	}
+
+	/** What a purge squad goes for: every living thing but the kingdom's own, and strangers without the king's writ. */
+	private boolean isPurged(LivingEntity target) {
+		if (!purge || target instanceof NerisEntity || target instanceof ManticoreEntity || !target.isAlive()) {
+			return false;
+		}
+		if (target instanceof PlayerEntity player) {
+			return !player.isCreative() && !player.isSpectator()
+					&& !player.getInventory().contains(new ItemStack(com.worldbetween.item.WorldBetweenItems.ROYAL_WRIT));
+		}
+		return true;
 	}
 
 	@Override
@@ -335,6 +353,7 @@ public class NerisEntity extends PathAwareEntity implements Merchant, FactionMem
 		targetSelector.add(3, new ActiveTargetGoal<>(this, LivingEntity.class, 10, true, false,
 				target -> com.worldbetween.war.WarRules.isEnemy(this, target)));
 		targetSelector.add(4, new ActiveTargetGoal<>(this, HostileEntity.class, 10, true, false, target -> role().fights()));
+		targetSelector.add(5, new ActiveTargetGoal<>(this, LivingEntity.class, 5, false, false, this::isPurged));
 	}
 
 	@Override

@@ -76,6 +76,14 @@ public final class TownManager {
 					case ARKI -> com.worldbetween.colony.ColonyFeatures.of(world, faction, settlement);
 					default -> TownFeatures.of(world, faction, settlement);
 				};
+				List<TownFeatures.Feature> works = com.worldbetween.faction.projects.WorksFeatures.of(world, faction, settlement);
+				if (!works.isEmpty()) {
+					features = new java.util.ArrayList<>(features);
+					features.addAll(works);
+				}
+				if (settlement.counter(Damage.DAMAGE) > 0 || settlement.counter("damage_seed") != 0) {
+					features = features.stream().map(f -> TownFeatures.damageable(f, Damage.level(settlement, f.key()))).toList();
+				}
 				for (TownFeatures.Feature feature : features) {
 					if (budget[0] <= 0 || System.nanoTime() > deadline) {
 						return;

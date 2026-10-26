@@ -52,11 +52,20 @@ public class WorldBetween implements ModInitializer {
 		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.arki.ArkiSky::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.item.StonePath::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.war.WarPresence::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.war.Repairs::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.war.Weapons::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.faction.projects.NetherFront::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.faction.projects.NightSky::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.faction.projects.MorokPresence::onServerTick);
+		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.faction.projects.WorksPresence::onServerTick);
 		ServerTickEvents.END_SERVER_TICK.register(com.worldbetween.entity.arki.ArkiSecurity::onServerTick);
 		net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AFTER_DEATH.register(com.worldbetween.town.TownSecurity::onKill);
 		net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AFTER_DEATH.register(com.worldbetween.war.WarPresence::onDeath);
 		net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.register((entity, world) ->
-				com.worldbetween.entity.NerisPresence.onEntityLoad(entity));
+				{
+					com.worldbetween.entity.NerisPresence.onEntityLoad(entity);
+					com.worldbetween.faction.projects.NetherFront.onEntityLoad(entity, world);
+				});
 		PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
 			if (world instanceof ServerWorld serverWorld && player instanceof ServerPlayerEntity serverPlayer) {
 				MineSecurity.onBlockBroken(serverPlayer, serverWorld, pos, state);

@@ -33,6 +33,7 @@ public final class ArkiSky {
 	private static final int COMET_TICKS = 120;
 	private static final int CAPSULE_TICKS = 90;
 	private static final int GAP = 400;
+	private static final int STORM_GAP = 30;
 	private static final double SEEN = 600;
 	private static final ParticleEffect HEAD = new DustParticleEffect(new Vector3f(0.35f, 0.45f, 1f), 4f);
 	private static final ParticleEffect TAIL = new DustParticleEffect(new Vector3f(0.7f, 0.3f, 1f), 3f);
@@ -44,6 +45,7 @@ public final class ArkiSky {
 	private static int elapsed;
 	private static long lastLanding = -GAP;
 	private static boolean forced;
+	private static final java.util.Set<String> stormWarned = new java.util.HashSet<>();
 
 	private ArkiSky() {
 	}
@@ -77,7 +79,9 @@ public final class ArkiSky {
 		if (flying == null) {
 			long time = world.getTimeOfDay() % 24000L;
 			boolean night = time > 13000 && time < 23000;
-			if ((night || forced) && !faction.comets().isEmpty() && now - lastLanding > GAP) {
+			// A comet storm comes down one after another, day or night; everything else waits for the dark.
+			boolean storm = !faction.comets().isEmpty() && faction.comets().get(0).kind() == Comet.Kind.STRIKE;
+			if ((night || forced || storm) && !faction.comets().isEmpty() && now - lastLanding > (storm ? STORM_GAP : GAP)) {
 				launch(world, faction.comets().get(0));
 				forced = false;
 			}
@@ -138,6 +142,15 @@ public final class ArkiSky {
 		double angle = world.random.nextDouble() * Math.PI * 2;
 		start = end.add(Math.cos(angle) * 500, 0, Math.sin(angle) * 500).withAxis(net.minecraft.util.math.Direction.Axis.Y, 330);
 		boolean colony = comet.kind() == Comet.Kind.SEA_COLONY || comet.kind() == Comet.Kind.SKY_COLONY;
+		if (comet.kind() == Comet.Kind.STRIKE) {
+			start = end.add(Math.cos(angle) * 260, 0, Math.sin(angle) * 260).withAxis(net.minecraft.util.math.Direction.Axis.Y, 300);
+			for (ServerPlayerEntity player : world.getPlayers()) {
+				if (player.getPos().squaredDistanceTo(end) < SEEN * SEEN && stormWarned.add(player.getUuid() + "/" + comet.colony() + "/" + comet.resource())) {
+					player.sendMessage(Text.translatable("message.worldbetween.arki.storm").formatted(Formatting.LIGHT_PURPLE), false);
+				}
+			}
+			return;
+		}
 		for (ServerPlayerEntity player : world.getPlayers()) {
 			double dx = end.x - player.getX();
 			double dz = end.z - player.getZ();
@@ -158,6 +171,10 @@ public final class ArkiSky {
 			world.spawnParticles(ParticleTypes.END_ROD, end.x, end.y, end.z, 40, 1.5, 1, 1.5, 0.05);
 			world.playSound(null, at, SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, SoundCategory.NEUTRAL, 3f, 0.8f);
 		} else {
+			if (comet.kind() == Comet.Kind.STRIKE) {
+				// It bursts where it falls: whoever stands there is thrown and burnt, though the ground keeps (the town does not).
+				world.createExplosion(null, end.x, end.y, end.z, 4f, false, net.minecraft.world.World.ExplosionSourceType.NONE);
+			}
 			world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, end.x, end.y, end.z, 2, 1, 1, 1, 0);
 			world.spawnParticles(ParticleTypes.SPLASH, end.x, end.y, end.z, 400, 4, 2, 4, 0.6);
 			world.spawnParticles(ParticleTypes.REVERSE_PORTAL, end.x, end.y, end.z, 300, 3, 3, 3, 0.4);

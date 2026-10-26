@@ -68,6 +68,8 @@ public final class WarSimulation {
 			}
 			dispatch(context, war, a, b);
 			dispatch(context, war, b, a);
+			Weapons.use(context, war, a, b);
+			Weapons.use(context, war, b, a);
 		}
 		march(context, now);
 		encounters(context, now);
@@ -199,6 +201,12 @@ public final class WarSimulation {
 		}
 		WarState wars = context.state().wars();
 		Warband band = new Warband(wars.nextBandId(), side.type(), kind, home.id(), home.pos(), enemy.type(), target, to, fighters, context.day());
+		if (kind.isArmy() && side.type() == FactionType.NERIS) {
+			// The seekers ride the manticores out with the army.
+			int beasts = (int) Math.min(Math.min(3, side.counter("manticores")), side.seekers().size());
+			side.addCounter("manticores", -beasts);
+			band.setBeasts(beasts);
+		}
 		wars.bands().add(band);
 		return band;
 	}
@@ -324,7 +332,7 @@ public final class WarSimulation {
 			return;
 		}
 		Random random = context.random();
-		double attack = army.fighters() * Armies.unit(side) * (0.8 + random.nextDouble() * 0.4);
+		double attack = Armies.strength(side, army) * (0.8 + random.nextDouble() * 0.4);
 		double defense = Armies.garrison(enemy, town, side.type()) * (0.8 + random.nextDouble() * 0.4);
 		BlockPos field = lerp(town.pos(), army.homePos(), 30 / Math.max(31, distance(town.pos(), army.homePos())));
 		int fallenAttackers;
@@ -333,6 +341,7 @@ public final class WarSimulation {
 			fallenAttackers = (int) Math.round(army.fighters() * Math.min(0.6, defense / attack * 0.4));
 			int before = town.population();
 			Armies.sack(enemy, town, side);
+			Repairs.damage(town, 25); // walls breached, houses burnt
 			fallenDefenders = Math.max(1, before - town.population());
 			war.addTownSacked();
 			war.addTension(12 * pairing(war));
@@ -345,9 +354,11 @@ public final class WarSimulation {
 			fallenAttackers = (int) Math.round(army.fighters() * (0.5 + random.nextDouble() * 0.4));
 			fallenDefenders = (int) Math.round(Math.max(1, attack / Armies.unit(enemy) * 0.4));
 			loseDefenders(enemy, town, fallenDefenders);
+			Repairs.damage(town, 8);
 			war.addTension(6 * pairing(war));
 			context.chronicle(enemy.type(), "chronicle.worldbetween.war.repelled", town.name(), "@war.worldbetween.people." + side.type().id());
 		}
+		loseBeasts(army, fallenAttackers);
 		army.setFighters(army.fighters() - fallenAttackers);
 		war.recordBattle(side.type(), fallenAttackers, enemy.type(), fallenDefenders);
 		addField(context, Battlefield.Kind.SIEGE, field, side.type(), fallenAttackers, enemy.type(), fallenDefenders);
@@ -434,8 +445,8 @@ public final class WarSimulation {
 		Faction fx = state.faction(x.faction());
 		Faction fy = state.faction(y.faction());
 		Random random = context.random();
-		double sx = x.fighters() * Armies.unit(fx) * (0.75 + random.nextDouble() * 0.5) * home(state, fx, at);
-		double sy = y.fighters() * Armies.unit(fy) * (0.75 + random.nextDouble() * 0.5) * home(state, fy, at);
+		double sx = Armies.strength(fx, x) * (0.75 + random.nextDouble() * 0.5) * home(state, fx, at);
+		double sy = Armies.strength(fy, y) * (0.75 + random.nextDouble() * 0.5) * home(state, fy, at);
 		Warband winner = sx >= sy ? x : y;
 		Warband loser = winner == x ? y : x;
 		double ratio = Math.min(sx, sy) / Math.max(1e-6, Math.max(sx, sy));
@@ -448,6 +459,8 @@ public final class WarSimulation {
 	public static void resolve(SimulationContext context, Warband winner, int winnerFallen, Warband loser, int loserFallen, BlockPos at, double now) {
 		WarState wars = context.state().wars();
 		War war = wars.war(winner.faction(), loser.faction());
+		loseBeasts(winner, winnerFallen);
+		loseBeasts(loser, loserFallen);
 		winner.setFighters(winner.fighters() - winnerFallen);
 		loser.setFighters(loser.fighters() - loserFallen);
 		boolean big = winner.kind().isArmy() || loser.kind().isArmy();
@@ -480,7 +493,7 @@ public final class WarSimulation {
 		Faction side = context.state().faction(band.faction());
 		int guards = journey.kind() == Journey.Kind.PATROL ? 2 : journey.kind() == Journey.Kind.CARAVAN ? 1 : 0;
 		double defense = (guards + 0.3 * journey.kind().people()) * Armies.unit(neris);
-		double attack = band.fighters() * Armies.unit(side) * (0.8 + context.random().nextDouble() * 0.4);
+		double attack = Armies.strength(side, band) * (0.8 + context.random().nextDouble() * 0.4);
 		BlockPos at = journey.position(now);
 		WarState wars = context.state().wars();
 		War war = wars.war(band.faction(), FactionType.NERIS);
@@ -509,6 +522,13 @@ public final class WarSimulation {
 		war.addTension(4 * pairing(war));
 		if (band.fighters() <= 0) {
 			wars.bands().remove(band);
+		}
+	}
+
+	/** The beasts go down in the same share as the fighters around them. */
+	private static void loseBeasts(Warband band, int fallen) {
+		if (band.beasts() > 0 && band.fighters() > 0) {
+			band.setBeasts(band.beasts() - (int) Math.round(band.beasts() * Math.min(1.0, fallen / (double) band.fighters())));
 		}
 	}
 

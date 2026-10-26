@@ -91,6 +91,7 @@ public final class WorldBetweenCommand {
 								.then(CommandManager.literal("replay").executes(WorldBetweenCommand::replayArrival))))
 				.then(CommandManager.literal("journeys").executes(WorldBetweenCommand::journeys))
 				.then(WarCommand.node())
+				.then(WorksCommand.node())
 				.then(CommandManager.literal("hold").executes(WorldBetweenCommand::hold))
 				.then(CommandManager.literal("colony").executes(WorldBetweenCommand::colony))
 				.then(CommandManager.literal("comet")

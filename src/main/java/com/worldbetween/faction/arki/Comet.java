@@ -16,7 +16,9 @@ public class Comet {
 		/** Brings more exiles to a colony that called them with its starlight. */
 		ARRIVALS,
 		/** A capsule from one colony to another, with what the other is short of. */
-		HELP
+		HELP,
+		/** One of a comet storm called down on an enemy town: it bursts where it falls. */
+		STRIKE
 	}
 
 	private final int id;

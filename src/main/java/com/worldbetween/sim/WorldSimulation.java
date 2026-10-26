@@ -53,6 +53,10 @@ public final class WorldSimulation {
 			behavior.simulateDay(context, faction);
 		}
 		com.worldbetween.war.WarSimulation.simulateDay(context);
+		com.worldbetween.war.Repairs.simulateDay(context);
+		for (Faction faction : state.factions()) {
+			com.worldbetween.faction.projects.Projects.simulateDay(context, faction);
+		}
 		state.markDirty();
 	}
 }

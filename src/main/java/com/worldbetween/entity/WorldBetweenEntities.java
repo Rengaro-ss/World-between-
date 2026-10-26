@@ -32,6 +32,24 @@ public final class WorldBetweenEntities {
 			EntityType.Builder.<com.worldbetween.entity.arki.ArkiOrbEntity>create(com.worldbetween.entity.arki.ArkiOrbEntity::new, SpawnGroup.MISC)
 					.dimensions(0.35f, 0.35f).maxTrackingRange(8).trackingTickInterval(1).build(WorldBetween.MOD_ID + ":arki_orb"));
 
+	/** A manticore of the kingdom, bred in its menagerie and ridden by a seeker. */
+	public static final EntityType<ManticoreEntity> MANTICORE = Registry.register(Registries.ENTITY_TYPE,
+			Identifier.of(WorldBetween.MOD_ID, "manticore"),
+			EntityType.Builder.create(ManticoreEntity::new, SpawnGroup.MISC).dimensions(1.6f, 1.5f).passengerAttachments(1.75f)
+					.maxTrackingRange(12).build(WorldBetween.MOD_ID + ":manticore"));
+
+	/** The Ancient Morok: half as tall again as any Kament. */
+	public static final EntityType<com.worldbetween.entity.morok.MorokEntity> MOROK = Registry.register(Registries.ENTITY_TYPE,
+			Identifier.of(WorldBetween.MOD_ID, "morok"),
+			EntityType.Builder.create(com.worldbetween.entity.morok.MorokEntity::new, SpawnGroup.MISC).dimensions(1.4f, 3.6f)
+					.maxTrackingRange(12).build(WorldBetween.MOD_ID + ":morok"));
+
+	/** A hound of stone that Morok calls up out of the rock. */
+	public static final EntityType<com.worldbetween.entity.morok.StoneHoundEntity> STONE_HOUND = Registry.register(Registries.ENTITY_TYPE,
+			Identifier.of(WorldBetween.MOD_ID, "stone_hound"),
+			EntityType.Builder.create(com.worldbetween.entity.morok.StoneHoundEntity::new, SpawnGroup.MISC).dimensions(0.8f, 0.9f)
+					.maxTrackingRange(10).build(WorldBetween.MOD_ID + ":stone_hound"));
+
 	private WorldBetweenEntities() {
 	}
 
@@ -39,5 +57,8 @@ public final class WorldBetweenEntities {
 		FabricDefaultAttributeRegistry.register(NERIS, NerisEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(KAMENT, com.worldbetween.entity.kament.KamentEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(ARKI, com.worldbetween.entity.arki.ArkiEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(MANTICORE, ManticoreEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(MOROK, com.worldbetween.entity.morok.MorokEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(STONE_HOUND, com.worldbetween.entity.morok.StoneHoundEntity.createAttributes());
 	}
 }
