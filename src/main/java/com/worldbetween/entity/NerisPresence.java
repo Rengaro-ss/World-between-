@@ -251,11 +251,19 @@ public final class NerisPresence {
 					entity -> entity.setAnchor(square, plaza + 8)));
 		}
 
+		// The watch, as the simulation counts it: the hall door first, then the towers, then the square;
+		// those out on the round outside the town are not at their posts.
+		int watch = Math.max(0, com.worldbetween.war.Armies.watch(faction, settlement)
+				- com.worldbetween.war.Armies.patrol(world.getServer(), faction, settlement));
+		int doors = Math.min(watch, settlement.tier() == 0 ? 1 : 2);
+		watch -= doors;
 		// Guards at the watchtowers, and on the square of a bigger town.
 		List<BlockPos> towers = layout.towerSpots(settlement.tier());
 		// Guards out on patrol are not at their posts.
 		int towerGuards = Math.max(0, Math.min(4, Math.min(towers.size(), settlement.buildingCount(BuildingType.WATCHTOWER)))
 				- Journeys.away(faction, settlement.id(), Journey.Kind.PATROL));
+		towerGuards = Math.min(towerGuards, watch);
+		watch -= towerGuards;
 		for (int i = 0; i < towerGuards; i++) {
 			BlockPos tower = towers.get(i);
 			BlockPos post = tower.withY(world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, tower.getX(), tower.getZ() - 2));
@@ -267,7 +275,7 @@ public final class NerisPresence {
 		}
 		// Guards at the hall door, who decide who goes in.
 		TownLayout.Hall door = layout.hall(settlement.tier(), settlement.isCapital());
-		for (int i = 0; i < (settlement.tier() == 0 ? 1 : 2); i++) {
+		for (int i = 0; i < doors; i++) {
 			BlockPos post = door.outside((i == 0 ? -1 : 1) * (door.doorHalf() + 1), 1);
 			wanted.put(prefix + "door:" + i, new Spawner(NerisRole.GUARD, post, 0, entity -> {
 				entity.setAnchor(post, 0);
@@ -275,7 +283,7 @@ public final class NerisPresence {
 			}));
 		}
 		if (settlement.tier() >= 2) {
-			for (int i = 0; i < 2; i++) {
+			for (int i = 0; i < Math.min(2, watch); i++) {
 				wanted.put(prefix + "watch:" + i, new Spawner(NerisRole.GUARD, square, plaza, entity -> entity.setAnchor(square, plaza)));
 			}
 		}
@@ -300,8 +308,14 @@ public final class NerisPresence {
 						if (killer != null) {
 							faction.changeReputation(killer.getUuid(), -10);
 							faction.declareCriminal(killer.getUuid(), WorldBetweenState.get(world.getServer()).day());
-							settlement.setPopulation(settlement.population() - 1);
 						}
+						// Whoever or whatever killed them, they are gone from the town's count.
+						if (entity.role() == NerisRole.GUARD) {
+							com.worldbetween.war.Armies.watchFallen(settlement);
+						} else {
+							settlement.setPopulation(Math.max(1, settlement.population() - 1));
+						}
+						WorldBetweenState.get(world.getServer()).markDirty();
 						SLOTS.remove(key);
 					});
 				}

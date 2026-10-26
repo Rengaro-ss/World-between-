@@ -191,7 +191,9 @@ public final class KamentPresence {
 		}
 
 		// Guards: at the gate of a mountain hold, round the rim of a deep city's cavern.
-		int guards = Math.min(6, 1 + tier + 2 * wards);
+		// As many as the simulation counts, less those out on the round.
+		int guards = Math.min(6, com.worldbetween.war.Armies.watch(faction, settlement)
+				- com.worldbetween.war.Armies.patrol(world.getServer(), faction, settlement));
 		for (int i = 0; i < guards; i++) {
 			BlockPos post;
 			if (!deep) {

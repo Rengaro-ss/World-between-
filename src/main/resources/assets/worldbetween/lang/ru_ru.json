@@ -750,5 +750,8 @@
   "visit.worldbetween.arki.thanks.0": "Звёзды благоволят тебе. Колония %s шлёт свет.",
   "visit.worldbetween.arki.thanks.1": "Возьми — сундук рядом. Пусть небо будет к тебе ясным.",
   "visit.worldbetween.arki.thanks.talk": "Ты — друг неба.",
-  "visit.worldbetween.raze.beaten": "Отряд разбит. Но они ещё вернутся."
+  "visit.worldbetween.raze.beaten": "Отряд разбит. Но они ещё вернутся.",
+  "speech.worldbetween.patrol.neris": "Обходим %s кругом, днём и ночью. Мимо нас никто не пройдёт.",
+  "speech.worldbetween.patrol.kament": "Гора держит дозор вокруг %s. Камень не спит.",
+  "speech.worldbetween.patrol.arki": "Мы облетаем колонию. Небо над ней — наше."
 }

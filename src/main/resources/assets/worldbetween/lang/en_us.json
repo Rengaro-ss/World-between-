@@ -750,5 +750,8 @@
   "visit.worldbetween.arki.thanks.0": "The stars favour you. The colony of %s sends its light.",
   "visit.worldbetween.arki.thanks.1": "Take it, the chest is beside you. May your sky be clear.",
   "visit.worldbetween.arki.thanks.talk": "You are a friend of the sky.",
-  "visit.worldbetween.raze.beaten": "The war party is broken. But they will be back."
+  "visit.worldbetween.raze.beaten": "The war party is broken. But they will be back.",
+  "speech.worldbetween.patrol.neris": "We walk the round of %s, day and night. No one gets past us.",
+  "speech.worldbetween.patrol.kament": "The mountain keeps watch round %s. Stone does not sleep.",
+  "speech.worldbetween.patrol.arki": "We fly the round of the colony. The sky above it is ours."
 }

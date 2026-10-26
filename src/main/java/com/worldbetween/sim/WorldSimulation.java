@@ -60,6 +60,7 @@ public final class WorldSimulation {
 		}
 		com.worldbetween.war.WarSimulation.simulateDay(context);
 		com.worldbetween.war.Repairs.simulateDay(context);
+		com.worldbetween.war.Armies.replaceWatch(state.faction(com.worldbetween.faction.FactionType.NERIS));
 		for (Faction faction : state.factions()) {
 			com.worldbetween.faction.projects.Projects.simulateDay(context, faction);
 		}

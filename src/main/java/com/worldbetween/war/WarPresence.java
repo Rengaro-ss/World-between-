@@ -78,7 +78,7 @@ public final class WarPresence {
 	private static final Set<UUID> ADOPTED = new HashSet<>();
 
 	public static boolean isManaged(UUID id) {
-		return MEMBERS.containsKey(id) || ADOPTED.contains(id);
+		return MEMBERS.containsKey(id) || ADOPTED.contains(id) || TownPatrols.isManaged(id);
 	}
 
 	public static void adopt(UUID id) {

@@ -3,7 +3,8 @@
 	"package": "com.worldbetween.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"BlockDropsMixin"
+		"BlockDropsMixin",
+		"MobEntityAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1

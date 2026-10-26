@@ -104,7 +104,8 @@ public final class ArkiPresence {
 			}
 		}
 		// Keepers round the capsule, and the rest drifting over the central disc.
-		int keepers = Math.min(people - out + 1, 1 + colony.tier());
+		int keepers = Math.max(1, Math.min(people - out + 1, com.worldbetween.war.Armies.watch(faction, colony)
+				- com.worldbetween.war.Armies.patrol(world.getServer(), faction, colony)));
 		out--;
 		for (int i = 0; i < keepers; i++) {
 			wanted.put(prefix + "keeper:" + i, new Spot(ArkiRole.KEEPER, origin, null, i == 0 ? "trade" : ""));
@@ -151,7 +152,7 @@ public final class ArkiPresence {
 	private record Spot(ArkiRole role, BlockPos anchor, BlockPos work, String speech) {
 	}
 
-	private static void slain(MinecraftServer server, Faction faction, Settlement colony, ServerPlayerEntity killer) {
+	public static void slain(MinecraftServer server, Faction faction, Settlement colony, ServerPlayerEntity killer) {
 		WorldBetweenState state = WorldBetweenState.get(server);
 		colony.setPopulation(colony.population() - 1);
 		if (killer != null) {

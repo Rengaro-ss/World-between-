@@ -98,13 +98,85 @@ public final class Armies {
 		}
 	}
 
+	// ---------------------------------------------------------------- the town watch
+
+	/** Town guards of the kingdom fallen and not yet replaced. */
+	public static final String WATCH_LOST = "watch_lost";
+
+	/**
+	 * How many guards stand in a town by the simulation's count: exactly as many as a player can find there,
+	 * on the posts and out on patrol together. The kingdom's are the town watch (two, and two more a tier)
+	 * and the town's share of the soldiers at home, less the fallen not yet replaced; the Kaments' are the
+	 * gate guards of the hold, the Arki's the keepers of the colony, both out of the town's own people.
+	 */
+	public static int watch(Faction faction, Settlement town) {
+		return switch (faction.type()) {
+			case NERIS -> {
+				int total = Math.max(1, faction.totalPopulation() - faction.soldiers());
+				int share = (int) Math.round(faction.soldiers() * (double) town.population() / total);
+				yield Math.max(0, 2 + 2 * town.tier() + share - (int) town.counter(WATCH_LOST));
+			}
+			case KAMENT -> Math.max(0, Math.min(1 + town.tier() + 2 * Kaments.count(town, KamentHall.WARD), town.population() / 2));
+			case ARKI -> Math.max(0, Math.min(1 + town.tier(), town.population() / 3));
+		};
+	}
+
+	/**
+	 * How many of the watch walk the round outside the town. Once a people has an army (the kingdom its
+	 * soldiers, the others a war with anyone at all), every town of theirs keeps a patrol out, two or three
+	 * strong, as long as it has guards to spare for one.
+	 */
+	public static int patrol(net.minecraft.server.MinecraftServer server, Faction faction, Settlement town) {
+		if (town.dimension() != World.OVERWORLD || faction.type() == FactionType.KAMENT && Kaments.isDeep(town)) {
+			return 0;
+		}
+		boolean army = switch (faction.type()) {
+			case NERIS -> faction.soldiers() > 0;
+			case KAMENT, ARKI -> {
+				com.worldbetween.world.WorldBetweenState state = com.worldbetween.world.WorldBetweenState.get(server);
+				boolean met = false;
+				for (FactionType other : FactionType.values()) {
+					met |= other != faction.type() && state.wars().level(faction.type(), other) > 0;
+				}
+				yield met;
+			}
+		};
+		int watch = watch(faction, town);
+		if (!army || watch < 2) {
+			return 0;
+		}
+		// One at least stays at home.
+		return Math.min(faction.type() == FactionType.NERIS ? 3 : 2, watch - 1);
+	}
+
+	/** A guard of the kingdom has fallen in a town: one fewer on watch until the soldiers send another. */
+	public static void watchFallen(Settlement town) {
+		town.addCounter(WATCH_LOST, 1);
+	}
+
+	/** Each day the kingdom fills the gaps in its town watches: from its soldiers if it has them, else from the town. */
+	public static void replaceWatch(Faction neris) {
+		for (Settlement town : neris.settlements()) {
+			long lost = town.counter(WATCH_LOST);
+			if (lost <= 0) {
+				continue;
+			}
+			if (neris.soldiers() > 0) {
+				neris.setSoldiers(neris.soldiers() - 1);
+			} else if (town.population() > 4) {
+				town.setPopulation(town.population() - 1);
+			} else {
+				continue;
+			}
+			town.setCounter(WATCH_LOST, lost - 1);
+		}
+	}
+
 	/** What a town holds out with when an army comes to its walls. */
 	public static double garrison(Faction faction, Settlement town, FactionType attacker) {
 		return switch (faction.type()) {
 			case NERIS -> {
-				int total = Math.max(1, faction.totalPopulation());
-				double soldiers = faction.soldiers() * (double) town.population() / total + 2 + 2 * town.tier();
-				yield soldiers * unit(faction) * (1 + 0.25 * town.tier());
+				yield watch(faction, town) * unit(faction) * (1 + 0.25 * town.tier());
 			}
 			case KAMENT -> (1 + town.tier() + 2 * Kaments.count(town, KamentHall.WARD) + town.population() / 6.0) * unit(faction) * 1.4;
 			case ARKI -> (1 + town.population() / 3.0) * unit(faction) * (attacker == FactionType.NERIS ? 1.3 : 1);

@@ -189,6 +189,9 @@ public class KamentEntity extends PathAwareEntity implements com.worldbetween.tr
 		targetSelector.add(2, new ActiveTargetGoal<>(this, PlayerEntity.class, 10, true, false, this::isEnemy));
 		targetSelector.add(3, new ActiveTargetGoal<>(this, LivingEntity.class, 10, true, false,
 				target -> com.worldbetween.war.WarRules.isEnemy(this, target)));
+		// The guards keep the gate against whatever comes out of the dark.
+		targetSelector.add(4, new ActiveTargetGoal<>(this, net.minecraft.entity.mob.HostileEntity.class, 10, true, false,
+				target -> role().fights() && com.worldbetween.entity.Monsters.isMonster(target)));
 	}
 
 	/** The guards and the Ancients turn on whoever the people have judged an enemy. */
