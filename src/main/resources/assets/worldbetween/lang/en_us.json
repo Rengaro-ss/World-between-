@@ -43,7 +43,7 @@
   "chronicle.worldbetween.neris.era_3": "The Kingdom of Neris has entered the Steel Age. Their army is a power everyone must reckon with.",
   "chronicle.worldbetween.neris.expansion": "Settlers from %s arrived and founded %s near (%s, %s).",
   "command.worldbetween.unknown_faction": "Unknown faction: %s",
-  "command.worldbetween.status.header": "=== World Between, day %s ===",
+  "command.worldbetween.status.header": "=== World Between, day %s (history day %s) ===",
   "command.worldbetween.status.dormant": "not implemented yet",
   "command.worldbetween.status.not_arrived": "has not come to this world yet",
   "command.worldbetween.status.active": "%s settlements, population %s, %s soldiers, era: %s",

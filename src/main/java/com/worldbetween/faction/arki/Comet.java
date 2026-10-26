@@ -29,6 +29,8 @@ public class Comet {
 	private final int people;
 	private final String resource;
 	private final long amount;
+	/** Day of history the comet was first seen to be on its way; -1 until then. */
+	private long queued = -1;
 
 	public Comet(int id, Kind kind, BlockPos target, BlockPos from, int colony, int people, String resource, long amount) {
 		this.id = id;
@@ -75,6 +77,14 @@ public class Comet {
 		return amount;
 	}
 
+	public long queued() {
+		return queued;
+	}
+
+	public void setQueued(long day) {
+		this.queued = day;
+	}
+
 	public NbtCompound toNbt() {
 		NbtCompound nbt = new NbtCompound();
 		nbt.putInt("Id", id);
@@ -87,6 +97,7 @@ public class Comet {
 		nbt.putInt("People", people);
 		nbt.putString("Resource", resource == null ? "" : resource);
 		nbt.putLong("Amount", amount);
+		nbt.putLong("Queued", queued);
 		return nbt;
 	}
 
@@ -97,8 +108,10 @@ public class Comet {
 		} catch (IllegalArgumentException e) {
 			return null;
 		}
-		return new Comet(nbt.getInt("Id"), kind, BlockPos.fromLong(nbt.getLong("Target")),
+		Comet comet = new Comet(nbt.getInt("Id"), kind, BlockPos.fromLong(nbt.getLong("Target")),
 				nbt.contains("From") ? BlockPos.fromLong(nbt.getLong("From")) : null, nbt.getInt("Colony"), nbt.getInt("People"),
 				nbt.getString("Resource"), nbt.getLong("Amount"));
+		comet.queued = nbt.contains("Queued") ? nbt.getLong("Queued") : -1;
+		return comet;
 	}
 }

@@ -73,7 +73,7 @@ public final class Morok {
 	public static void slain(SimulationContext context, Faction kaments, String by) {
 		kaments.setCounter("morok.alive", 0);
 		if (capitalStands(kaments)) {
-			kaments.setCounter("morok.dead_until", context.day() + REVIVE_DAYS);
+			kaments.setCounter("morok.dead_until", context.day() + com.worldbetween.sim.Clock.simDays(REVIVE_DAYS));
 			context.chronicle(FactionType.KAMENT, "chronicle.worldbetween.morok.slain", by);
 		} else {
 			kaments.setCounter("morok.dead_until", -1);

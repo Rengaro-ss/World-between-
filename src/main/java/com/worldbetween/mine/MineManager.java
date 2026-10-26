@@ -42,7 +42,7 @@ public final class MineManager {
 
 		/** How far the miners have got right now. */
 		public int progress(ServerWorld world) {
-			return Math.min(plan.totalSteps(), mine.progress((world.getTimeOfDay() % 24000L) / 24000f));
+			return Math.min(plan.totalSteps(), mine.progress((float) (com.worldbetween.sim.Clock.now(world.getServer()) - WorldBetweenState.get(world.getServer()).day())));
 		}
 
 		/** Whether {@code pos} lies inside a part of the tunnel that has already been dug. */

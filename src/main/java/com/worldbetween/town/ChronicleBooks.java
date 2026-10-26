@@ -65,7 +65,7 @@ public final class ChronicleBooks {
 				break;
 			}
 			if (entry.faction() == faction.type() && entry.args().contains(settlement.name())) {
-				pages.add(RawFilteredPair.of(Text.translatable("chronicle.worldbetween.day", entry.day())
+				pages.add(RawFilteredPair.of(Text.translatable("chronicle.worldbetween.day", com.worldbetween.sim.Clock.worldDay(entry.day()))
 						.append("\n\n").append(entry.message())));
 			}
 		}

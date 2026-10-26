@@ -82,7 +82,7 @@ public final class NetherFront {
 
 	/** How much of the Nether the kingdom has cleared: the share of its creatures that no longer come. */
 	public static double cleared(Faction neris) {
-		return Math.min(MAX_CLEARED, neris.counter("hell.cleared") / 250.0);
+		return Math.min(MAX_CLEARED, neris.counter("hell.cleared") / 600.0);
 	}
 
 	/** Fewer of the Nether's creatures come into the world the more of it the kingdom has cleared. */

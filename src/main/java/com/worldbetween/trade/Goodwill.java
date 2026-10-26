@@ -20,7 +20,7 @@ public final class Goodwill {
 
 	public static void earn(ServerPlayerEntity player, Faction faction, int gain) {
 		UUID id = player.getUuid();
-		long day = WorldBetweenState.get(player.getServer()).day();
+		long day = com.worldbetween.sim.Clock.worldDay(player.getServer()); // a day's goodwill is a day of the world
 		long[] earned = EARNED.computeIfAbsent(faction.type().id() + "/" + id, k -> new long[]{day, 0});
 		if (earned[0] != day) {
 			earned[0] = day;

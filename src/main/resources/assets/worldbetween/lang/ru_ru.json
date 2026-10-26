@@ -43,7 +43,7 @@
   "chronicle.worldbetween.neris.era_3": "Королевство Нерис вступило в Стальной век. Их армия — сила, с которой считаются все.",
   "chronicle.worldbetween.neris.expansion": "Поселенцы из %s дошли и основали поселение %s у (%s, %s).",
   "command.worldbetween.unknown_faction": "Неизвестная фракция: %s",
-  "command.worldbetween.status.header": "=== World Between — день %s ===",
+  "command.worldbetween.status.header": "=== World Between — день %s (дней истории: %s) ===",
   "command.worldbetween.status.dormant": "ещё не реализована",
   "command.worldbetween.status.not_arrived": "ещё не пришла в этот мир",
   "command.worldbetween.status.active": "поселений %s, население %s, солдат %s, эпоха: %s",

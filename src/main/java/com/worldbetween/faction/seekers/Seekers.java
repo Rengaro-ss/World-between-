@@ -26,7 +26,8 @@ import java.util.UUID;
  * The kingdom only grows where a seeker has been.
  */
 public final class Seekers {
-	private static final int SCOUT_INTERVAL = 12;
+	/** Days of the world between a seeker's visits to the same stranger. */
+	private static final int SCOUT_INTERVAL = 4;
 	private static final int MIN_SITE_SPACING = 160;
 
 	private Seekers() {
@@ -88,7 +89,7 @@ public final class Seekers {
 		for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
 			if (player.getServerWorld() == server.getOverworld() && !player.isSpectator()
 					&& faction.seekers().stream().noneMatch(s -> s.isAlive() && s.mission() == Seeker.Mission.SCOUT && player.getUuid().equals(s.forPlayer()))
-					&& faction.tryEvent("scout_" + player.getUuid(), context.day(), SCOUT_INTERVAL)) {
+					&& faction.tryEvent("scout_" + player.getUuid(), context.day(), com.worldbetween.sim.Clock.simDays(SCOUT_INTERVAL))) {
 				seeker.send(Seeker.Mission.SCOUT, at, player.getBlockPos(), now, -1, player.getUuid());
 				return;
 			}

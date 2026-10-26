@@ -27,6 +27,8 @@ public class WorldBetweenState extends PersistentState {
 	private long day;
 	/** The overworld day number at which the last simulation step happened, or -1 if never. */
 	private long lastWorldDay = -1;
+	/** World time (ticks of the sun) at which day 0 of the history began; -1 until the first run. */
+	private long startTick = -1;
 	private final EnumMap<FactionType, Faction> factions = new EnumMap<>(FactionType.class);
 	private final List<ChronicleEntry> chronicle = new ArrayList<>();
 	private com.worldbetween.war.WarState wars = new com.worldbetween.war.WarState();
@@ -47,6 +49,15 @@ public class WorldBetweenState extends PersistentState {
 
 	public void advanceDay() {
 		day++;
+		markDirty();
+	}
+
+	public long startTick() {
+		return startTick;
+	}
+
+	public void setStartTick(long startTick) {
+		this.startTick = startTick;
 		markDirty();
 	}
 
@@ -87,6 +98,7 @@ public class WorldBetweenState extends PersistentState {
 	public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
 		nbt.putLong("Day", day);
 		nbt.putLong("LastWorldDay", lastWorldDay);
+		nbt.putLong("StartTick", startTick);
 		NbtCompound factionsNbt = new NbtCompound();
 		factions.forEach((type, faction) -> factionsNbt.put(type.id(), faction.toNbt()));
 		nbt.put("Factions", factionsNbt);
@@ -101,6 +113,7 @@ public class WorldBetweenState extends PersistentState {
 		WorldBetweenState state = new WorldBetweenState();
 		state.day = nbt.getLong("Day");
 		state.lastWorldDay = nbt.contains("LastWorldDay") ? nbt.getLong("LastWorldDay") : -1;
+		state.startTick = nbt.contains("StartTick") ? nbt.getLong("StartTick") : -1;
 		NbtCompound factionsNbt = nbt.getCompound("Factions");
 		for (FactionType type : FactionType.values()) {
 			if (factionsNbt.contains(type.id())) {

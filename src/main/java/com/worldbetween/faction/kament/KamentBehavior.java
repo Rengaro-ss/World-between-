@@ -60,9 +60,9 @@ public class KamentBehavior implements FactionBehavior {
 		Faction neris = context.state().faction(FactionType.NERIS);
 		if (neris.hasArrived() && !neris.settlements().isEmpty()) {
 			// The opening of Hell wakes them, a day of earthquakes after.
-			return (int) neris.settlements().get(0).foundedDay() + 1;
+			return (int) (neris.settlements().get(0).foundedDay() + com.worldbetween.sim.Clock.simDays(1));
 		}
-		return context.config().kamentArrivalDay;
+		return (int) com.worldbetween.sim.Clock.simDays(context.config().kamentArrivalDay);
 	}
 
 	@Override

@@ -94,7 +94,7 @@ public final class WarPresence {
 		ServerWorld world = server.getOverworld();
 		WorldBetweenState state = WorldBetweenState.get(server);
 		WarState wars = state.wars();
-		double now = state.day() + (world.getTimeOfDay() % 24000L) / 24000.0;
+		double now = com.worldbetween.sim.Clock.now(server);
 		Set<Integer> alive = new HashSet<>();
 		for (Warband band : List.copyOf(wars.bands())) {
 			alive.add(band.id());

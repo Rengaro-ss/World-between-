@@ -79,6 +79,7 @@ public final class Arkis {
 	/** How bright the moon is on a day: full at phase 0, all but dark at phase 4. */
 	public static float moonlight(long day) {
 		float[] light = {1f, 0.85f, 0.6f, 0.35f, 0.1f, 0.35f, 0.6f, 0.85f};
-		return light[(int) Math.floorMod(day, 8L)];
+		// The moon keeps the world's time, not history's.
+		return light[(int) Math.floorMod(com.worldbetween.sim.Clock.worldDay(day), 8L)];
 	}
 }

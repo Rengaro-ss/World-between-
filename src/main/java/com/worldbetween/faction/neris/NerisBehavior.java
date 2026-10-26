@@ -71,7 +71,7 @@ public class NerisBehavior implements FactionBehavior {
 
 	@Override
 	public int arrivalDay(SimulationContext context) {
-		return context.config().nerisArrivalDay;
+		return (int) com.worldbetween.sim.Clock.simDays(context.config().nerisArrivalDay);
 	}
 
 	@Override

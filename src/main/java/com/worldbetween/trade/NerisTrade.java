@@ -142,7 +142,7 @@ public final class NerisTrade {
 			long fromTown = Math.min(market.coins(), deal.coins());
 			market.addCoins(-fromTown);
 			faction.takeResource(ResourceType.COINS, deal.coins() - fromTown);
-			long day = WorldBetweenState.get(player.getServer()).day();
+			long day = com.worldbetween.sim.Clock.worldDay(player.getServer()); // a day's goodwill is a day of the world
 			long[] help = HELP.computeIfAbsent(player.getUuid(), k -> new long[]{day, 0});
 			if (help[0] != day) {
 				help[0] = day;

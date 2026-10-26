@@ -40,8 +40,8 @@ public class ArkiBehavior implements FactionBehavior {
 	@Override
 	public int arrivalDay(SimulationContext context) {
 		FactionBehavior kaments = FactionBehaviors.get(FactionType.KAMENT);
-		int afterKaments = kaments == null ? 0 : kaments.arrivalDay(context) + 1;
-		return Math.max(context.config().arkiArrivalDay, afterKaments);
+		int afterKaments = kaments == null ? 0 : kaments.arrivalDay(context) + (int) com.worldbetween.sim.Clock.simDays(1);
+		return Math.max((int) com.worldbetween.sim.Clock.simDays(context.config().arkiArrivalDay), afterKaments);
 	}
 
 	@Override
@@ -84,9 +84,13 @@ public class ArkiBehavior implements FactionBehavior {
 
 	@Override
 	public void simulateDay(SimulationContext context, Faction faction) {
-		// Whatever did not come down in the night came down unseen.
+		// Whatever did not come down in the night came down unseen (a whole day of the world later).
 		for (Comet comet : List.copyOf(faction.comets())) {
-			land(context, faction, comet);
+			if (comet.queued() < 0) {
+				comet.setQueued(context.day());
+			} else if (context.day() - comet.queued() >= com.worldbetween.sim.Clock.simDays(1)) {
+				land(context, faction, comet);
+			}
 		}
 		long day = context.day();
 		for (Settlement colony : List.copyOf(faction.settlements())) {

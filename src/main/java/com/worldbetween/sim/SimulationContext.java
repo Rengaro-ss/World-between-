@@ -50,7 +50,7 @@ public class SimulationContext {
 				Arrays.stream(args).map(String::valueOf).toList());
 		state.addChronicle(entry);
 		WorldBetween.LOGGER.info("[Chronicle] day {} {}: {} {}", entry.day(), faction, key, entry.args());
-		if (config().broadcastChronicle) {
+		if (config().broadcastChronicle && entry.isMajor()) {
 			server.getPlayerManager().broadcast(entry.toText(), false);
 		}
 	}

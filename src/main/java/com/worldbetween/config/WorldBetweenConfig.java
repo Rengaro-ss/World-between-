@@ -17,7 +17,13 @@ import java.nio.file.Path;
 public class WorldBetweenConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-	/** Day on which the Kingdom of Neris comes through its portal. */
+	/**
+	 * How many days of history pass in one day of the world. The peoples' story (growth, ages, wars, great
+	 * works) runs this much faster than the sun; at 7 it is all there by about the eightieth day.
+	 * Everything a player counts in days (arrivals, the day of quakes, Morok's three days) stays in days of the world.
+	 */
+	public double pace = 7;
+	/** Day (of the world) on which the Kingdom of Neris comes through its portal. */
 	public int nerisArrivalDay = 3;
 	/** Day the Kaments wake if the Neris never come; otherwise the opening of their portal wakes them a day later. */
 	public int kamentArrivalDay = 7;

@@ -15,6 +15,7 @@ import com.worldbetween.faction.ResourceType;
 import com.worldbetween.faction.Settlement;
 import com.worldbetween.mine.MineManager;
 import com.worldbetween.mine.MinePlan;
+import com.worldbetween.sim.Clock;
 import com.worldbetween.sim.SimulationContext;
 import com.worldbetween.sim.WorldSimulation;
 import com.worldbetween.world.ChronicleEntry;
@@ -127,7 +128,7 @@ public final class WorldBetweenCommand {
 
 	private static int status(CommandContext<ServerCommandSource> context) {
 		WorldBetweenState state = WorldBetweenState.get(context.getSource().getServer());
-		send(context, Text.translatable("command.worldbetween.status.header", state.day()).formatted(Formatting.GOLD));
+		send(context, Text.translatable("command.worldbetween.status.header", Clock.worldDay(state.day()), state.day()).formatted(Formatting.GOLD));
 		for (Faction faction : state.factions()) {
 			MutableText line = Text.literal(" • ").append(faction.type().displayName()).append(": ");
 			if (FactionBehaviors.get(faction.type()) == null) {
@@ -308,7 +309,7 @@ public final class WorldBetweenCommand {
 	private static int journeys(CommandContext<ServerCommandSource> context) {
 		WorldBetweenState state = WorldBetweenState.get(context.getSource().getServer());
 		Faction faction = state.faction(FactionType.NERIS);
-		double now = state.day() + (context.getSource().getServer().getOverworld().getTimeOfDay() % 24000L) / 24000.0;
+		double now = com.worldbetween.sim.Clock.now(context.getSource().getServer());
 		send(context, Text.translatable("command.worldbetween.journeys.header", faction.journeys().size()).formatted(Formatting.GOLD));
 		Vec3d here = context.getSource().getPosition();
 		for (com.worldbetween.faction.journeys.Journey journey : faction.journeys()) {
@@ -482,7 +483,7 @@ public final class WorldBetweenCommand {
 		WorldBetweenState state = WorldBetweenState.get(context.getSource().getServer());
 		Faction faction = state.faction(FactionType.NERIS);
 		ServerWorld world = context.getSource().getServer().getOverworld();
-		double now = state.day() + (world.getTimeOfDay() % 24000L) / 24000.0;
+		double now = com.worldbetween.sim.Clock.now(world.getServer());
 		send(context, Text.translatable("command.worldbetween.seekers.header", faction.knownSites().size()).formatted(Formatting.GOLD));
 		for (BlockPos site : faction.knownSites()) {
 			send(context, Text.translatable("command.worldbetween.seekers.site", site.getX(), site.getZ()).formatted(Formatting.GRAY));
@@ -506,7 +507,7 @@ public final class WorldBetweenCommand {
 		WorldBetweenState state = WorldBetweenState.get(context.getSource().getServer());
 		Faction faction = state.faction(FactionType.NERIS);
 		ServerWorld world = context.getSource().getServer().getOverworld();
-		double now = state.day() + (world.getTimeOfDay() % 24000L) / 24000.0;
+		double now = com.worldbetween.sim.Clock.now(world.getServer());
 		com.worldbetween.faction.seekers.Seeker seeker = faction.seekers().stream().filter(com.worldbetween.faction.seekers.Seeker::isAlive)
 				.findFirst().orElse(null);
 		if (seeker == null) {

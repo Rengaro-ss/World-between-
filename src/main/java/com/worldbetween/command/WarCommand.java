@@ -143,7 +143,7 @@ public final class WarCommand {
 		if (state.wars().level(a, b) == 0) {
 			state.wars().war(a, b).setLevel(1, state.day());
 		}
-		double now = state.day() + (context.getSource().getServer().getOverworld().getTimeOfDay() % 24000L) / 24000.0;
+		double now = com.worldbetween.sim.Clock.now(context.getSource().getServer());
 		int first = place(state, a, b, here.add(-15, 0, 0), now, na);
 		int second = place(state, b, a, here.add(15, 0, 0), now, nb);
 		state.markDirty();

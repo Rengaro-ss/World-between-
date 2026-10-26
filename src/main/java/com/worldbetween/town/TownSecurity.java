@@ -424,9 +424,10 @@ public final class TownSecurity {
 		if (!faction.isActive() || faction.isCriminal(player.getUuid()) || townAt(world, faction, killed.getBlockPos()) == null) {
 			return;
 		}
-		long[] defence = DEFENCE.computeIfAbsent(player.getUuid(), k -> new long[]{state.day(), 0});
-		if (defence[0] != state.day()) {
-			defence[0] = state.day();
+		long today = com.worldbetween.sim.Clock.worldDay(state.day());
+		long[] defence = DEFENCE.computeIfAbsent(player.getUuid(), k -> new long[]{today, 0});
+		if (defence[0] != today) {
+			defence[0] = today;
 			defence[1] = 0;
 		}
 		if (defence[1]++ < MAX_DEFENCE_PER_DAY) {

@@ -16,8 +16,22 @@ import java.util.List;
  * One line of the world chronicle. Stored as a translation key so it shows in the reader's language.
  */
 public record ChronicleEntry(long day, FactionType faction, String key, List<String> args) {
+	/** Events big enough to be told to everyone at once; the rest are written down for whoever reads the chronicle. */
+	private static final String[] MAJOR = {".era_", "war.contact", "war.rise.", "war.cool.", "war.sacked", "war.razed", "war.campaign",
+			"project.found.", "project.begun.", "project.done.", "project.storm", "project.quake_strike", "morok.", "hell.vote",
+			".arrival", "kament.awaken", "kament.quakes", "court.first_king", "court.king_", "court.elected", "court.acclaimed", "tier_3"};
+
+	public boolean isMajor() {
+		for (String mark : MAJOR) {
+			if (key.contains(mark)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public MutableText toText() {
-		MutableText text = Text.translatable("chronicle.worldbetween.day", day).formatted(Formatting.GRAY);
+		MutableText text = Text.translatable("chronicle.worldbetween.day", com.worldbetween.sim.Clock.worldDay(day)).formatted(Formatting.GRAY);
 		if (faction != null) {
 			text.append(" ").append(faction.displayName()).append(Text.literal(":").formatted(Formatting.GRAY));
 		}

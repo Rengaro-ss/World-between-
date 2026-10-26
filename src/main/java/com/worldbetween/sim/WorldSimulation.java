@@ -11,7 +11,6 @@ import net.minecraft.server.MinecraftServer;
  * whether or not any player is near the factions.
  */
 public final class WorldSimulation {
-	private static final int TICKS_PER_DAY = 24000;
 	private static final int CHECK_INTERVAL = 20;
 	/** Upper bound on days simulated in one tick, so a large time jump cannot freeze the server. */
 	private static final int MAX_DAYS_PER_TICK = 4;
@@ -24,15 +23,22 @@ public final class WorldSimulation {
 			return;
 		}
 		WorldBetweenState state = WorldBetweenState.get(server);
-		long worldDay = server.getOverworld().getTimeOfDay() / TICKS_PER_DAY;
-		if (state.lastWorldDay() < 0 || worldDay < state.lastWorldDay()) {
-			// First run in this world, or time was set backwards: just start counting from here.
-			state.setLastWorldDay(worldDay);
+		long time = server.getOverworld().getTimeOfDay();
+		double pace = Clock.pace();
+		if (state.startTick() < 0) {
+			// First run in this world (or a save from before there were two clocks): history starts now.
+			state.setStartTick(time - (long) (state.day() * Clock.TICKS_PER_DAY / pace));
 			return;
 		}
-		for (int i = 0; i < MAX_DAYS_PER_TICK && state.lastWorldDay() < worldDay; i++) {
+		long target = (long) Math.floor((time - state.startTick()) * pace / Clock.TICKS_PER_DAY);
+		if (target < state.day()) {
+			// Time was set back, or history was run ahead by hand: go on counting from here.
+			state.setStartTick(time - (long) Math.ceil(state.day() * Clock.TICKS_PER_DAY / pace));
+			return;
+		}
+		// Days of history come one at a time through the day, about every couple of minutes at a pace of ten.
+		for (int i = 0; i < MAX_DAYS_PER_TICK && state.day() < target; i++) {
 			simulateDay(server, state);
-			state.setLastWorldDay(state.lastWorldDay() + 1);
 		}
 	}
 

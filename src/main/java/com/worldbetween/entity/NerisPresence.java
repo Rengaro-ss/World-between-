@@ -75,7 +75,7 @@ public final class NerisPresence {
 		if (!faction.isActive()) {
 			return;
 		}
-		double now = state.day() + (world.getTimeOfDay() % 24000L) / 24000.0;
+		double now = com.worldbetween.sim.Clock.now(server);
 		seekers(world, faction, now);
 		journeys(world, faction, now);
 		if (SLOTS.keySet().stream().anyMatch(k -> k.startsWith("journey:") || k.startsWith("seeker:"))) {
